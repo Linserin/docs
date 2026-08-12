@@ -12,10 +12,10 @@ const nimbusConfig = defineNimbusConfig({
   // CHANGE_ME: your project's name — used for <title>, the home H1, and OG.
   title: "Linserin Yang's Notes",
   // CHANGE_ME: a one-line description of your docs — used for meta + OG.
-  description: "Minimal starter consuming nimbus-docs.",
-  locale: "en",
-  github: null,
-  socialImageAlt: "Nimbus documentation preview",
+  description: "A note site using nimbus-docs.",
+  locale: "zh",
+  github: "https://github.com/linserin/docs",
+  socialImageAlt: "Linserin Yang's Notes",
 });
 
 export default defineConfig({

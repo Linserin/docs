@@ -1,0 +1,64 @@
+---
+title: "Start"
+sidebar:
+  order: 4
+---
+
+# 引言
+
+我决定学习 [GoLang](https://golang.google.cn).
+
+<Aside title="GoLang" type="info">
+  GoLang is developed by Google.For more information,please visit [https://golang.google.cn](https://golang.google.cn).
+</Aside>
+
+Download: [https://golang.google.cn/dl/](https://golang.google.cn/dl/)
+
+- 添加环境变量
+
+<Aside title="提示">
+  本文档不建议没有任何经验关于 Programming 的人学习（尽管我猜你们也不在这里学习 Go）。
+
+  Linserin 有 C\+\+ 的编写经历（NOI），本文档会不由自主地带上一些 C\+\+ 思维。
+</Aside>
+
+## Hello World!
+
+```powershell
+go mod init example/hello
+```
+
+<Aside title="go.mod" type="info">
+  此时在工作目录下方应该会存在一个 `go.mod` 文件，此文件为 Go 项目的标志，随后 `go mod tidy` 会用到。
+</Aside>
+
+粘贴代码：
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}
+```
+
+运行：
+
+```shellscript
+>go run .
+Hello, World!
+```
+
+## 构建输出：
+
+```shellscript
+>go build -o [可执行文件]
+```
+
+至此，Hello World 完成。
+
+## 参考：
+
+[Go 官方教程](https://golang.google.cn/doc/tutorial/getting-started)

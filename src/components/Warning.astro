@@ -1,0 +1,14 @@
+---
+import Aside from "./ui/aside/Aside.astro";
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"aside"> {
+  title?: string;
+}
+
+const { title, ...attrs } = Astro.props;
+---
+
+<Aside type="caution" title={title ?? "警告"} {...attrs}>
+  <slot />
+</Aside>

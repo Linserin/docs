@@ -1,0 +1,279 @@
+---
+title: Astro 快速上手
+description: 从零开始创建并运行第一个 Astro 站点。
+sidebar:
+  order: 2
+---
+
+import { Icon } from "astro-icon/components";
+
+# Astro 快速上手
+
+本文带你从零开始创建并运行第一个 Astro 站点，涵盖项目创建、目录结构、页面路由、组件与内容集合等核心概念。
+
+<Aside type="tip" title="Astro 是什么">
+Astro 是一个内容优先的静态站点框架，默认零 JavaScript 输出，需要交互时可按需注入 `客户端` 脚本。它内置 MDX、内容集合与图片优化，非常适合文档站、博客与营销页。
+</Aside>
+
+## 环境准备
+
+开始前需要安装 [Node.js](https://nodejs.org) 20 或更高版本，并选择一个包管理器（npm / pnpm / yarn / bun）。
+
+```bash
+node -v # 检查版本，建议 >= 20
+```
+
+<Aside type="note" title="pnpm">
+本站在 `pnpm-workspace.yaml` 中启用了 pnpm workspace，推荐统一使用 `pnpm` 管理依赖。
+</Aside>
+
+## 创建项目
+
+使用 `create-astro` 脚手架初始化项目，它会引导你选择模板与配置项。
+
+<PackageManagers type="create" pkg="astro" args="--template basics" />
+
+`--template basics` 会创建一个包含页面、组件与样式的极简示例，你也可以省略该参数进入交互式选择。
+
+<Steps>
+<Step title="创建并进入目录">
+
+```bash
+pnpm create astro@latest my-astro-app
+cd my-astro-app
+```
+
+</Step>
+<Step title="安装依赖">
+
+```bash
+pnpm install
+```
+
+</Step>
+<Step title="启动开发服务器">
+
+```bash
+pnpm dev
+```
+
+默认在 `http://localhost:4321` 打开，保存文件即热更新。
+
+</Step>
+</Steps>
+
+<Aside type="caution" title="端口占用">
+`astro dev` 默认使用 4321 端口，被占用时会自动递增。可通过 `pnpm dev -- --port 4000` 指定端口。
+</Aside>
+
+## 项目结构
+
+```
+my-astro-app/
+├── src/
+│   ├── pages/          # 页面，基于文件的路由
+│   ├── layouts/        # 布局组件，包裹页面骨架
+│   ├── components/     # UI 组件（.astro / .jsx / .vue 等）
+│   ├── content/        # 内容集合（Markdown / MDX 文档）
+│   ├── styles/         # 全局样式
+│   ├── lib/            # 工具函数
+│   └── assets/         # 被引用的图片等静态资源
+├── public/             # 原样复制到输出目录的静态文件
+├── astro.config.mjs    # Astro 配置文件
+└── package.json
+```
+
+## 页面与路由
+
+`src/pages/` 下的每个文件对应一个路由：文件名即 URL 路径，`.astro` / `.md` / `.mdx` 均可作为页面。
+
+| 文件 | 路由 |
+|---|---|
+| `src/pages/index.astro` | `/` |
+| `src/pages/about.astro` | `/about` |
+| `src/pages/blog/[slug].astro` | `/blog/hello`（动态参数） |
+| `src/pages/posts/hello.md` | `/posts/hello`（Markdown 页面） |
+
+### 动态路由
+
+```
+src/pages/blog/
+├── index.astro
+└── [slug].astro
+```
+
+```astro
+---
+// src/pages/blog/[slug].astro
+export async function getStaticPaths() {
+  return [
+    { params: { slug: "hello" }, props: { title: "你好" } },
+    { params: { slug: "world" }, props: { title: "世界" } },
+  ];
+}
+
+const { slug } = Astro.params;
+const { title } = Astro.props;
+---
+
+<main>
+  <h1>{title}</h1>
+  <p>当前文章：{slug}</p>
+</main>
+```
+
+`getStaticPaths` 在构建时枚举所有路径，默认产出静态 HTML；配合 `output: "server"` 或 SSR 适配器时可改走服务端渲染。
+
+## 组件
+
+`.astro` 组件由 Frontmatter（脚本）+ 模板两部分组成，模板与 JSX 语法相似，但只在服务端渲染，**默认不带任何客户端脚本**。
+
+```astro
+---
+// src/components/Greeting.astro
+const { name = "世界" } = Astro.props;
+---
+
+<p>你好，{name}！</p>
+```
+
+```astro
+---
+import Greeting from "../components/Greeting.astro";
+---
+
+<Greeting name="Astro" />
+```
+
+需要浏览器端交互时，在标签上添加 `client:` 指令即可注入脚本：
+
+```astro
+<Greeting name="Astro" client:load />
+```
+
+<CardGrid>
+<Card title="client:load" icon="ph:lightning">
+页面加载后立即在浏览器中执行组件脚本。
+</Card>
+<Card title="client:idle" icon="ph:timer">
+页面空闲时再执行，适合非首屏关键交互。
+</Card>
+<Card title="client:visible" icon="ph:eye">
+组件进入视口时才执行，适合折叠区域的组件。
+</Card>
+<Card title="client:only" icon="ph:monitor">
+仅客户端渲染，适用于无法在服务端执行的前端组件。
+</Card>
+</CardGrid>
+
+## 布局
+
+布局组件接收 `slot` 插槽内容，复用页面的公共骨架（`<head>`、导航、页脚）。
+
+```astro
+---
+// src/layouts/BaseLayout.astro
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+```
+
+```astro
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="关于我">
+  <h1>关于我</h1>
+  <p>欢迎来到我的站点。</p>
+</BaseLayout>
+```
+
+## 内容集合
+
+内容集合把 Markdown / MDX 文档放进 `src/content/` 并定义统一的 schema，适合写文档、博客等结构化内容，本网站的文档页就是这么组织的。
+
+```ts
+// src/content.config.ts
+import { defineCollection, z } from "astro:content";
+
+const docs = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+  }),
+});
+
+export const collections = { docs };
+```
+
+在页面中查询与渲染集合内容：
+
+```astro
+---
+import { getCollection, render } from "astro:content";
+
+const posts = await getCollection("docs");
+const { Content } = await render(posts[0]);
+---
+
+<Content />
+```
+
+<Aside type="tip" title="本网站的写法">
+本站基于 `@cloudflare/nimbus-docs`，内容集合、侧边栏与 MDX 全局组件都由它统一管理，详见根目录的 `AGENT.md`。
+</Aside>
+
+## 常用命令
+
+<PackageManagers type="run" args="dev" />
+<PackageManagers type="run" args="build" />
+<PackageManagers type="run" args="preview" />
+
+| 命令 | 作用 |
+|---|---|
+| `astro dev` | 启动开发服务器（热更新） |
+| `astro build` | 构建站点，输出到 `dist/` |
+| `astro preview` | 本地预览生产构建产物 |
+| `astro check` | 对 `.astro` 文件做类型检查 |
+| `astro add` | 一键添加官方集成（React、Tailwind 等） |
+
+<Steps>
+<Step title="添加官方集成">
+
+```bash
+pnpm astro add tailwind react
+```
+
+`astro add` 会自动安装依赖并改写配置文件。
+
+</Step>
+<Step title="构建并预览">
+
+```bash
+pnpm build
+pnpm preview
+```
+
+</Step>
+</Steps>
+
+## 小结
+
+- `src/pages/` 下文件名即路由，支持动态参数与 `getStaticPaths`。
+- `.astro` 组件默认服务端渲染、零 JS，需要交互时用 `client:*` 指令按需注入。
+- 布局组件复用页面骨架，`<slot />` 注入页面内容。
+- 内容集合为 Markdown / MDX 提供统一的 schema 与查询 API，适合文档站。
+- 静态站用 `astro build` 构建到 `dist/`，可部署到任意静态托管平台。

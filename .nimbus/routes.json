@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "base": "/",
+  "knownRoutes": [
+    "/",
+    "/404",
+    "/commands",
+    "/go/array",
+    "/go/calc",
+    "/go/error-handling",
+    "/go/for-for-loop",
+    "/go/go-lib",
+    "/go/if",
+    "/go/include-packages",
+    "/go/input-and-formatting",
+    "/go/start-1",
+    "/go/switch",
+    "/go/using-go-standard-library",
+    "/go/variable",
+    "/hi-there",
+    "/mix-up-spaces",
+    "/otp",
+    "/参考资料/astro-quickstart",
+    "/参考资料/components",
+    "/参考资料/getting-started",
+    "/参考资料/mdx-guide",
+    "/参考资料/welcome"
+  ],
+  "opaqueNamespaces": []
+}

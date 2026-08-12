@@ -1,0 +1,115 @@
+---
+title: "if 的使用以及常用逻辑词"
+sidebar:
+  order: 8
+---
+
+# 引言
+
+<Info title=" ">
+  Linserin 作为一个有 C\+\+ NOI 经历的人（尽管已经几乎忘光了），算法这里总是绕不开的话题。这里先从简单讲起。
+</Info>
+
+先前已经学习了 Hello World 的实现和 `quote` 模块的调用，接下来将要学习 if-switch 的使用。
+
+For example:
+
+我们做一个判断闰年的计算器。
+
+闰年为能被4整除且不能被100整除，或能被400整除。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var input string
+    fmt.Print("输入年份：")
+    fmt.Scanln(&input)
+
+    var year int
+    // fmt.Sscanf 解析年份
+    n, err := fmt.Sscanf(input, "%d", &year)
+    if err != nil || n != 1 {
+        fmt.Println("Invalid input.")
+        return
+    }
+
+    // 判定
+    if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
+        fmt.Printf("%d 年是闰年。\n", year)
+    } else {
+        fmt.Printf("%d 年是平年（普通年）。\n", year)
+    }
+}
+```
+
+## 算法讲解
+
+<Steps>
+  <Step title="程序开始">
+    ```go
+        var input string
+        fmt.Print("输入年份：")
+        fmt.Scanln(&input)
+    ```
+
+    赋值输入 `input` （`input` 为字符串类型）
+  </Step>
+  <Step title="格式化为 int 变量">
+    ```go
+    // year 变量    
+    var year int
+    
+    // fmt.Sscanf 解析出年份
+    n, err := fmt.Sscanf(input, "%d", &year)
+    
+    // 错误处理
+    if err != nil || n != 1 {
+        fmt.Println("Invalid input.")
+        return
+    }
+    ```
+  </Step>
+  <Step title="判定并输出">
+    ```go
+    // 能被4整除且不能被100整除，或能被400整除
+    if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
+        fmt.Printf("%d 年是闰年。\n", year)
+    } else {
+        fmt.Printf("%d 年是平年（普通年）。\n", year)
+    }
+    ```
+  </Step>
+</Steps>
+
+# 逻辑词
+
+## 逻辑运算符（返回布尔值）
+
+这是最常说的“逻辑词”，用于组合布尔表达式：
+
+- `&&`（**逻辑与**）：两边都为 `true` 时结果为 `true`（**短路**：左边为 `false` 时右边不执行）。
+- `||`（**逻辑或**）：任意一边为 `true` 时结果为 `true`（**短路**：左边为 `true` 时右边不执行）。
+- `!`（**逻辑非**）：取反，`!true` 为 `false`，`!false` 为 `true`。
+
+## 执行流干预词
+
+### `break`
+
+立即终止当前所在的 `for`、`switch` 或 `select`。
+
+`switch` 和 `select` 默认自带 `break`, 因此基本不需要 break.
+
+### `continue`
+
+- **作用**：仅用于 **`for` 循环**，跳过本次循环的剩余代码，直接进入下一次迭代。
+
+<Warning title="">
+  不能用于 `switch` 或 `select`。
+</Warning>
+
+## `return`
+
+- **作用**：终止当前函数的执行。若有返回值，则带上返回值；若无，则单独使用。

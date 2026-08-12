@@ -1,0 +1,15 @@
+---
+// Changelog.astro — 更新日志组件
+// 在页面中展示版本更新记录
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"div"> {
+  title?: string;
+}
+
+const { title = "更新日志", class: className, ...attrs } = Astro.props;
+---
+
+<div class={className} {...attrs}>
+  <slot />
+</div>

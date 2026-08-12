@@ -1,0 +1,70 @@
+---
+title: "  TOTP 双因素身份验证"
+sidebar:
+  order: 1
+---
+
+> **笔者极度厌恶厂商、服务商等强制绑定 OTP 2FA 的做法，故写此文章讲述 OTP 原理。**
+
+> 由于 TOTP 使用广泛，且 TOTP 基于 [HOTP](https://zh.wikipedia.org/wiki/%E5%9F%BA%E4%BA%8E%E6%95%A3%E5%88%97%E6%B6%88%E6%81%AF%E9%AA%8C%E8%AF%81%E7%A0%81%E7%9A%84%E4%B8%80%E6%AC%A1%E6%80%A7%E5%AF%86%E7%A0%81%E7%AE%97%E6%B3%95) 算法，此文章仅讲述 TOTP。
+
+查看 Wikipedia 上的 [TOTP - 基于时间的一次性密码算法](https://zh.wikipedia.org/wiki/%E5%9F%BA%E4%BA%8E%E6%97%B6%E9%97%B4%E7%9A%84%E4%B8%80%E6%AC%A1%E6%80%A7%E5%AF%86%E7%A0%81%E7%AE%97%E6%B3%95)
+# 需要输入：
+
+- 当前时间戳
+- 一个通常唯一的用来生产 TOTP 6 位数字的输入，通常为 Base32 编码的随机字符串
+
+# 开始运算
+
+## 第一步：生成时间计数器
+
+首先取得当前的 Unix 时间戳，然后除以有效时间步（也就是 TOTP 验证码的有效期，通常为 30 秒），最后取整此结果作为时间计数器 T：
+
+```
+T = floor(current_unix_time / time_step)
+```
+
+## 第二步：生成哈希值
+
+使用 [HMAC-SHA1](https://zh.wikipedia.org/wiki/HMAC) 算法，以 Base32 解码后的密钥作为密钥，以时间计数器 T（8 字节大端整数）作为消息，进行运算得到一个 20 字节的哈希值 H：
+
+```
+H = HMAC-SHA1(key, T)
+```
+>虽然默认使用 HMAC-SHA1，但 RFC 6238 明确支持 HMAC-SHA256 / HMAC-SHA512 作为替代方案
+## 第三步：动态截断
+
+从哈希值 H 中提取 4 字节的数字，将其转换为一个 31 位的正整数（最高位设为 0 以确保是正数）：
+
+1. 取 H 最后一个字节的低 4 位作为偏移量 offset
+2. 从 H[offset] 开始取 4 个字节，拼接成 32 位整数
+3. 将该整数的最高位设为 0，得到 31 位整数 D
+
+## 第四步：生成验证码
+
+将 D 对验证码位数（通常为 6）的 10 的幂次取模，得到最终的 TOTP 验证码：
+
+```
+code = D mod 10^digits
+```
+
+这样就得到了一个 6 位数的验证码。
+
+
+
+# 弱点和缺陷
+尽管攻击者需要实时托管凭证，而不能之后收集，但是TOTP代号跟密码一样可能被钓鱼。
+
+# 总结
+
+TOTP 算法依赖共享密钥与当前时间两个变量，只要这两个变量相同，输出结果也就相同。
+
+HMAC 的抗原像性使得难以从输出反推密钥或时间计数器。
+
+通过时间步长将连续时间离散化为计数器值。
+
+服务器与客户端都会计算密码，但是由服务器来检查客户端提供的密码是否匹配服务器本地生成的密码。考虑到轻微的时钟偏移、网络延迟或用户延误等情况，有些服务器允许接受本应该在早先已生成或稍后才生成的密码。
+
+尽管如此，TOTP仍然比单独使用传统静态密码验证的安全性强很多。上述的一些问题也可以通过简单的方法解决（比如为防止暴力破解，可以增加TOTP的位数，或者使用多个TOTP同时验证）。
+
+Learn more: [RFC 6238 - TOTP: Time-Based One-Time Password Algorithm](https://datatracker.ietf.org/doc/html/rfc6238) / [RFC 4226 - HOTP: An HMAC-Based One-Time Password Algorithm](https://datatracker.ietf.org/doc/html/rfc4226)

@@ -1,0 +1,19 @@
+---
+/**
+ * ReadingProgress — thin progress bar pinned to the top of the viewport.
+ * Reflects scroll position through the current page. Rendered by
+ * BaseLayout so it appears on every page.
+ */
+---
+
+<div
+  data-nb-reading-progress
+  role="progressbar"
+  aria-label="Reading progress"
+  class="pointer-events-none fixed inset-x-0 top-0 z-60 h-0.5 origin-left bg-primary"
+  style="transform: scaleX(0)"
+></div>
+
+<script>
+  import "./reading-progress.client";
+</script>

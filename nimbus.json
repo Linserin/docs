@@ -1,0 +1,43 @@
+{
+  "$schema": "https://nimbus-docs.com/schema/nimbus.json",
+  "version": "0.6.4",
+  "templatesTag": "templates-v0.6.4",
+  "variant": "starter",
+  "registry": "https://nimbus-docs.com/registry",
+  "install": {
+    "root": "src",
+    "aliases": {
+      "@/*": "src/*"
+    }
+  },
+  "components": [
+    {
+      "slug": "collapsible",
+      "type": "registry:ui",
+      "version": "0.8.2",
+      "source": "https://nimbus-docs.com/registry",
+      "hash": "sha256:fa5b4051d79bf4f651402da2fffff4b2b2f450f3c82be2a31d8b92244cdbba05",
+      "files": [
+        "src/components/ui/collapsible/Collapsible.astro",
+        "src/components/ui/collapsible/CollapsibleContent.astro",
+        "src/components/ui/collapsible/CollapsibleTrigger.astro",
+        "src/components/ui/collapsible/collapsible.client.ts",
+        "src/components/ui/collapsible/index.ts"
+      ]
+    },
+    {
+      "slug": "accordion",
+      "type": "registry:ui",
+      "version": "0.8.2",
+      "source": "https://nimbus-docs.com/registry",
+      "hash": "sha256:ad4b8419f8f4918e06ccc6b7bc94ae7060a0aa3fe84aa17fb603dd45df55cc5f",
+      "files": [
+        "src/components/ui/accordion/Accordion.astro",
+        "src/components/ui/accordion/AccordionContent.astro",
+        "src/components/ui/accordion/AccordionGroup.astro",
+        "src/components/ui/accordion/AccordionTrigger.astro",
+        "src/components/ui/accordion/index.ts"
+      ]
+    }
+  ]
+}

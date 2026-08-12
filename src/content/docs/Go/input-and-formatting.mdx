@@ -1,0 +1,273 @@
+---
+title: "输入与格式化"
+sidebar:
+  order: 7
+---
+
+`fmt` 模块类似 C\+\+ 中的 `iostream`，C 中的 `stdio.h`
+
+接下来开始讲述。
+
+## 处理输入
+
+<Steps>
+  <Step title="使用 fmt 包提供的 Scan 和 Sscan 开头的函数">
+    ```go
+    // 从控制台读取输入:
+    package main
+    import "fmt"
+    
+    var (
+       firstName, lastName, s string
+       i int
+       f float32
+       input = "56.12 / 5212 / Go"
+       format = "%f / %d / %s"
+    )
+    
+    func main() {
+       fmt.Println("Please enter your full name: ")
+       fmt.Scanln(&firstName, &lastName)
+       // fmt.Scanf("%s %s", &firstName, &lastName)
+       fmt.Printf("Hi %s %s!\n", firstName, lastName) // Hi Chris Naegels
+       fmt.Sscanf(input, format, &f, &i, &s)
+       fmt.Println("From the string we read: ", f, i, s)
+        // 输出结果: From the string we read: 56.12 5212 Go
+    }
+    ```
+  </Step>
+  <Step title="运行">
+    ```shellscript
+    go mod tidy;go run .
+    ```
+  </Step>
+  <Step title="输出">
+    ```text
+    C:\Users\Administrator\Desktop\git\0>go run .
+    Please enter your full name:
+    Chris Naegels
+    Hi Chris Naegels !
+    From the string we read:  56.12 5212 Go
+    ```
+  </Step>
+</Steps>
+
+## 解析
+
+我们分三部分讲这里的过程。
+
+<Steps>
+  <Step title="引入 fmt,声明变量">
+    在这里开头，先使用 var() 声明了一堆变量
+
+    让我们首先关注 firstName 和 lastName。
+
+    和这两个函数相关的代码我们单独抽出来：
+
+    ```go
+
+    package main
+    
+    import "fmt"
+    
+    var (
+    
+    	firstName, lastName string
+    
+    )
+    
+    func main() {
+    
+    	fmt.Println("Please enter your full name: ")
+    
+    	fmt.Scanln(&firstName, &lastName)
+    
+    	// fmt.Scanf("%s %s", &firstName, &lastName)
+    
+    	fmt.Printf("Hi %s %s!\\n", firstName, lastName) // Hi Chris Naegels
+    
+    }
+    
+    ```
+
+    声明这两个函数为 `string` 类型，随即打印 `Please enter your full name:` 。
+
+    在此之`fmt.Scanln(&firstName, &lastName)` 让用户输入，以空格分割两个变量（从注释中 `fmt.Scanf("%s %s", &firstName, &lastName)` 不难看出）
+
+    然后再将两个变量打印。
+  </Step>
+  <Step title="input,f,i,s,format 四个变量">
+    在这四个变量中 `format` 变量是把 `input`变量转换为 `f`,`i`,`s` 的格式化的规范。
+
+    在开头定义了 `input` 的值为
+
+    ```text
+    56.12 / 5212 / Go
+    ```
+
+    在这之中，`56.12` 为小数 `float`，`5212` 为整数 `int`，`Go` 为字符串 `string`
+
+    最终通过 `fmt.Sscanf(input, format, &f, &i, &s)` 进行格式化。\\
+  </Step>
+  <Step title="fmt.Sscanf() 中发生了什么？">
+    不难看出`fmt.Sscanf()` 中，输入的一方为 `&[变量名]`
+
+    那么 `input`与 `format` 作为输入值，经过 `format` 格式化后，赋值进入 `f`,`i`,`s` 中。
+
+    因此，经过复制后，是这样的过程（mermaid 流程由 AI 生成）。
+
+    ```mermaid actions={true}
+    graph LR
+A["input: 56.12 / 5212 / Go"] --> B[fmt.Sscanf]
+C["format: %f / %d / %s"] --> B
+B --> D[f = 56.12]
+B --> E[i = 5212]
+B --> F[s = Go]
+    ```
+  </Step>
+</Steps>
+
+从此之后，关于 Go 的输入输出基本够用了。
+
+## 格式化输出（fmt 的格式化能力）
+
+在 Go 语言中，`fmt` 不仅可以处理输入，还提供了非常强大的“格式化输出能力”，类似 C 语言中的 `printf` 系列函数。
+
+---
+
+## 格式化输出到控制台
+
+`fmt.Printf` 用于按照指定格式输出内容。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	name := "Go"
+	age := 15
+	score := 98.5
+
+	fmt.Printf("name=%s, age=%d, score=%.1f\n", name, age, score)
+}
+```
+
+输出结果：
+```
+> name=Go, age=15, score=98.5
+```
+
+## 常用格式化占位符（verbs）
+
+Go 的格式化符号非常重要，几乎所有 fmt 输出都会用到：
+
+| 占位符 | 说明 | 示例 |
+| --- | --- | --- |
+| `%s` | 字符串 | `"Go"` |
+| `%d` | 十进制整数 | `123` |
+| `%f` | 浮点数 | `3.14` |
+| `%.2f` | 保留 2 位小数的浮点数 | `3.14` |
+| `%t` | 布尔值 | `true` |
+| `%v` | 默认格式 | 任意类型 |
+| `%T` | 类型 | `int` / `string` |
+| `%+v` | 显示字段名（结构体） | `{Field:Value}` |
+
+## 生成格式化字符串
+
+`Sprintf` 不输出而返回一个字符串。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	name := "Gopher"
+	age := 20
+
+	result := fmt.Sprintf("name=%s, age=%d", name, age)
+	fmt.Println(result)
+}
+```
+
+输出：
+
+```text
+name=Gopher, age=20
+```
+
+多用于拼接字符串
+
+## 写入到指定输出流
+
+可以把格式化内容写入文件或其他输出目标。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	fmt.Fprintf(os.Stdout, "Hello %s!\n", "World")
+}
+```
+
+输出：
+
+> Hello World!
+
+> os.Stdout 表示标准输出，也可以替换为文件句柄。
+
+### Sscanf 的本质
+
+我们之前用过：
+
+```go
+fmt.Sscanf(input, format, &f, &i, &s)
+```
+
+按照 format 规则，从字符串中解析数据。
+
+示例：
+
+```text
+package main
+
+import "fmt"
+
+func main() {
+	input := "56.12 / 5212 / Go"
+
+	var f float64
+	var i int
+	var s string
+
+	fmt.Sscanf(input, "%f / %d / %s", &f, &i, &s)
+
+	fmt.Println(f, i, s)
+}
+```
+
+输出：
+
+```text
+56.12 5212 Go
+```
+
+
+---
+
+
+# 总结
+
+输出：Printf / Sprintf / Fprintf
+
+输入解析：Scan / Scanf / Sscanf
+
+参考：
+
+- [https://learnku.com/docs/the-way-to-go/121-reads-user-input/3661](https://learnku.com/docs/the-way-to-go/121-reads-user-input/3661)

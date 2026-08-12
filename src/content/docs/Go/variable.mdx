@@ -1,0 +1,367 @@
+---
+title: "变量"
+sidebar:
+  order: 6
+---
+
+此页存在 AI 生成内容。
+
+<Aside title="在本页" Info>
+  在 GoLang，变量类型基本和 C\+\+ 没什么特别突出的区分，_这里简单讲解基础类型_，写的时候多使用就自然而然的记住了。
+
+  重点掌握：
+
+  - `int`
+  - `float64`
+  - `bool`
+  - `string`
+  - `slice`
+  - `map`
+  - `struct`
+</Aside>
+
+# 声明变量
+
+<Warning>
+  在 Go 中的**局部函数**中，**声明了变量就一定要使用**。
+
+  注意全局变量和局部变量！
+</Warning>
+
+首先需要知道如何声明变量。
+
+- 声明变量:
+
+```go
+var [变量名] [变量类型]
+```
+
+- 声明变量并赋值:
+
+```go
+var [变量名] [变量类型] = [值]
+```
+
+- 此外，函数的返回值也能作为值 例如前面的 `quote` 代码中
+
+```go
+fmt.Println(quote.Go())
+```
+
+`quote.Go()` 即作为返回值给 `Println`。
+
+# Go 中的变量类型
+
+Go 的变量类型大致可以分为以下几类：**基础类型**、**复合类型**、**引用类型**、**接口类型**、**函数类型**、**通道类型**。
+
+---
+
+## 基础类型（Basic Types）
+
+基础类型是 Go 中最常用的数据类型，用于存储简单数据。
+
+### 整数类型
+
+用于存储整数。
+
+| 类型 | 位数 |
+| --- | --- |
+| int8 | 8 位 |
+| int16 | 16 位 |
+| int32 | 32 位 |
+| int64 | 64 位 |
+| int | 平台相关（32/64 位） |
+
+```go
+var age int = 18
+var score int64 = 100
+
+fmt.Println(age)
+fmt.Println(score)
+```
+
+**特点：**
+
+- 存储整数
+- 支持正数、负数、0
+- `int` 最常使用
+
+---
+
+### 无符号整数 uint
+
+只能存储非负整数。
+
+```go
+var count uint = 100
+var id uint64 = 99999
+```
+
+**特点：**
+
+- 不允许负数
+- 存储范围比同位数整数更大
+
+---
+
+### 浮点类型
+
+用于存储小数。
+
+```go
+var price float32 = 9.99
+var salary float64 = 12345.6789
+
+fmt.Println(price)
+fmt.Println(salary)
+```
+
+**特点：**
+
+- `float32` 精度较低
+- `float64` 为默认推荐类型
+
+---
+
+### 布尔类型
+
+用于表示真或假。
+
+```go
+var isLogin bool = true
+var isAdmin bool = false
+
+fmt.Println(isLogin)
+```
+
+**特点：**
+
+- 只有两个值：
+  - `true`
+  - `false`
+- 常用于条件判断
+
+---
+
+### 字符类型
+
+Go 使用 `rune` 表示 Unicode 字符。
+
+```go
+var ch rune = '中'
+
+fmt.Println(ch)
+fmt.Printf("%c\n", ch)
+```
+
+**特点：**
+
+- 本质是 `int32`
+- 支持中文、英文及各种 Unicode 字符
+
+---
+
+### 字符串类型
+
+用于存储文本内容。
+
+```go
+var name string = "Golang"
+
+fmt.Println(name)
+```
+
+**特点：**
+
+- 使用双引号包裹
+- 字符串不可修改（Immutable）
+
+---
+
+## 复合类型（Composite Types）
+
+复合类型由多个数据组合而成。
+
+### 数组（Array）
+
+固定长度的数据集合。
+
+```go
+var nums [3]int = [3]int{1, 2, 3}
+
+fmt.Println(nums)
+```
+
+**特点：**
+
+- 长度固定
+- 属于值类型
+- 长度也是类型的一部分
+
+---
+
+### 切片（Slice）
+
+动态长度数组。
+
+```go
+nums := []int{1, 2, 3}
+
+nums = append(nums, 4)
+
+fmt.Println(nums)
+```
+
+**特点：**
+
+- 长度可变
+- 底层基于数组实现
+- Go 开发中使用非常频繁
+
+---
+
+### 结构体（Struct）
+
+用于封装多个字段。
+
+```go
+type User struct {
+    Name string
+    Age  int
+}
+
+user := User{
+    Name: "Tom",
+    Age:  20,
+}
+
+fmt.Println(user)
+```
+
+**特点：**
+
+- 类似其他语言中的对象
+- 支持方法绑定
+- Go 面向对象的核心之一
+
+---
+
+## 引用类型（Reference Types）
+
+引用类型存储的是数据地址。
+
+### Map
+
+键值对集合。
+
+```go
+user := map[string]int{
+    "Tom": 20,
+    "Jack": 18,
+}
+
+fmt.Println(user["Tom"])
+```
+
+**特点：**
+
+- 类似字典（Dictionary）
+- 查询效率高
+- Key 不允许重复
+
+---
+
+### Pointer（指针）
+
+存储变量地址。
+
+```go
+var age int = 18
+
+var p *int = &age
+
+fmt.Println(*p)
+```
+
+**特点：**
+
+- 使用 `&` 获取地址
+- 使用 `*` 解引用
+- 可减少数据复制开销
+
+---
+
+## 接口类型（Interface）
+
+接口定义行为规范。
+
+```go
+type Speaker interface {
+    Speak()
+}
+```
+
+**特点：**
+
+- 不关心具体实现
+- 满足方法即可实现接口
+- Go 多态的核心机制
+
+---
+
+## 函数类型（Function）
+
+函数本身也是一种类型。
+
+```go
+var add func(int, int) int
+
+add = func(a, b int) int {
+    return a + b
+}
+
+fmt.Println(add(1, 2))
+```
+
+**特点：**
+
+- 函数可以赋值给变量
+- 可以作为参数传递
+- 支持闭包
+
+---
+
+## 通道类型（Channel）
+
+用于 Goroutine 之间通信。
+
+```go
+ch := make(chan int)
+
+go func() {
+    ch <- 100
+}()
+
+value := <-ch
+
+fmt.Println(value)
+```
+
+**特点：**
+
+- Go 并发编程核心
+- 天然支持协程通信
+- 避免共享内存带来的复杂问题
+
+---
+
+## 类型分类总结
+
+| 分类 | 常见类型 |
+| --- | --- |
+| 基础类型 | int、float64、bool、string、rune |
+| 复合类型 | array、slice、struct |
+| 引用类型 | map、pointer |
+| 接口类型 | interface |
+| 函数类型 | func |
+| 通道类型 | chan |

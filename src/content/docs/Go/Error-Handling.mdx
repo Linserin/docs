@@ -1,0 +1,53 @@
+---
+title: "Error 的创建与处理"
+sidebar:
+  order: 12
+---
+
+Go 把错误处理做成基于返回值的设计是 Go 最鲜明的语言特色之一。
+
+## 创建错误
+
+可以通过 `error` 库的 `errors.New` 来实现创建错误。
+
+```go
+import "errors"
+
+err := errors.New("something went wrong")
+```
+
+### 举例
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+func divide(a, b int) (int, error) {
+	if b == 0 {
+		return 0, errors.New("division by zero")
+	}
+	return a / b, nil
+}
+
+func main() {
+	result, err := divide(10, 0)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println(result)
+}
+```
+
+<Steps>
+  <Step title="调用 divide">
+    上方的 `main` 函数调用 `divide` 使得 `a` 与 `b` 相除`divide` 中判断除数是否为零，此时除数为零，创建错误，返回 `err` 和 `result` 变量。
+  </Step>
+  <Step title="判断错误是否空">
+    通过 `if` 判断是否 `err` 为空，此时不空，那么使用 `fmt.Println` 输出错误
+  </Step>
+</Steps>

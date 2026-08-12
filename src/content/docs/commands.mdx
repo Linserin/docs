@@ -1,0 +1,34 @@
+---
+title: "常用命令"
+sidebar:
+  order: 16
+---
+
+# Linux Softwares
+
+基于本人基本只用 Debian 或其衍生系统，因此只保存 Debian 系命令。
+
+## 换源
+
+- [Debian | 镜像站使用帮助 | 清华大学开源软件镜像站 | Tsinghua Open Source Mirror](https://mirrors.tuna.tsinghua.edu.cn/help/debian/)
+- [Debian - USTC Mirror Help](https://mirrors.ustc.edu.cn/help/debian.html)
+- [Debian | Debian 源帮助文档 | Tencent Cloud](https://mirrors.cloud.tencent.com/help/debian.html)
+- [Debian | MirrorZ Help](https://help.mirrorz.org/debian/)
+
+以上仅作推荐，高校镜像站的维护者靠兴趣与爱支持，不做 SLA 保证。由于阿里云的文档没有更新，因此不上名单。
+
+```shellscript
+sudo apt update
+sudo apt ugrade
+sudo apt install wget curl python3-venv tmux htop vim nano -y
+```
+
+## Android
+
+开启无线 ADB 调试：
+
+```shellscript
+adb tcpip 5555
+```
+
+`5555` 即为端口号.

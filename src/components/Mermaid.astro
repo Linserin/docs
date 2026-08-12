@@ -1,0 +1,30 @@
+---
+// Mermaid.astro — 客户端渲染 mermaid 代码块
+// 页面中只需要引入此组件一次，它会自动查找页面中所有
+// <pre class="mermaid"> 或 <code class="language-mermaid"> 并渲染
+---
+
+<script>
+  import mermaid from "mermaid";
+
+  // 初始化 mermaid 配置
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "default",
+    securityLevel: "loose",
+  });
+
+  // 主题切换时重新渲染
+  const observer = new MutationObserver(() => {
+    const mode = document.documentElement.dataset.mode;
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: mode === "dark" ? "dark" : "default",
+    });
+    mermaid.run();
+  });
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-mode"],
+  });
+</script>

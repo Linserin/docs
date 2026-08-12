@@ -1,0 +1,212 @@
+---
+title: MDX 写作指南
+description: 本站文档页的 MDX 语法与可用的全局组件。
+sidebar:
+  order: 3
+---
+
+import { Icon } from "astro-icon/components";
+
+# MDX 写作指南
+
+MDX 在 Markdown 的基础上允许在文档中直接使用组件，本站所有文档页（`src/content/docs/*.mdx`）都用它编写。本文介绍基本语法与本站内置的全局组件。
+
+## Frontmatter
+
+每个文档页开头用 YAML 定义元信息，`title` 为必填项，页面标题（H1）由 `title` 自动生成，**正文里不要再重复写 H1**。
+
+```mdx
+---
+title: 我的页面
+description: 一句话简介。
+sidebar:
+  order: 1
+---
+```
+
+<Aside type="caution" title="schema 校验">
+Frontmatter 需通过 `nimbus-docs` 的内容 schema 校验，字段不合法会导致页面无法渲染。
+</Aside>
+
+## 基础语法
+
+MDX 完全兼容 Markdown，标题、代码块、链接、表格等用法与普通 Markdown 一致。
+
+### 标题层级
+
+正文从 H2 开始，H2 与 H3 会自动进入页面右侧的目录（TOC）。
+
+```mdx
+## 二级标题
+
+### 三级标题
+```
+
+### 代码块
+
+用围栏代码块并标注语言，语法高亮由 Expressive Code 提供。
+
+````mdx
+```js
+const name = "Astro";
+console.log(`Hello, ${name}!`);
+```
+````
+
+### 链接与表格
+
+```mdx
+参考 [Astro 官方文档](https://docs.astro.build)。
+
+| 语法 | 说明 |
+|---|---|
+| `## H2` | 章节标题，进入 TOC |
+| ``` `` `code` `` ``` | 行内代码 |
+```
+
+<Aside type="note" title="内部链接">
+站内链接请写相对路径（如 `./go-lib.mdx`），`nimbus/internal-link` 规则会校验链接是否有效，避免 404。
+</Aside>
+
+## 使用组件
+
+MDX 里可以直接写组件标签。**组件必须是大驼峰（PascalCase）并注册在 `src/components.ts`**，构建前的校验器会拦截拼写错误并给出提示。
+
+```mdx
+<Aside type="tip" title="提示">
+需要调用组件时，直接在正文中书写标签即可。
+</Aside>
+```
+
+本站注册的全局组件：
+
+<CardGrid>
+<Card title="Aside" icon="ph:info">
+提示框，支持 `note` / `tip` / `caution` / `danger` 四种类型。
+</Card>
+<Card title="Tabs / TabItem" icon="ph:square-split-horizontal">
+选项卡，用于并列展示多段内容或示例。
+</Card>
+<Card title="CardGrid / Card" icon="ph:cards">
+卡片网格，适合罗列特性或入口。
+</Card>
+<Card title="Steps / Step" icon="ph:list-numbers">
+步骤条，适合展示操作流程。
+</Card>
+<Card title="PackageManagers" icon="ph:package">
+包管理器命令，自动按 npm / pnpm / yarn / bun 分页。
+</Card>
+<Card title="Render" icon="ph:file-code">
+按文件引用共享的 partial 内容。
+</Card>
+</CardGrid>
+
+### Aside — 提示框
+
+```mdx
+<Aside type="tip" title="标题">
+提示内容，支持行内代码 `code` 与**加粗**。
+</Aside>
+```
+
+- `note` 普通说明，`tip` 提示技巧，`caution` 提醒注意，`danger` 危险警告。
+- 不传 `title` 时使用类型默认标题。
+
+### Tabs — 选项卡
+
+```mdx
+<Tabs>
+<TabItem label="选项一">
+
+选项一的内容。
+
+</TabItem>
+<TabItem label="选项二">
+
+选项二的内容。
+
+</TabItem>
+</Tabs>
+```
+
+每个 `TabItem` 必须紧跟在 `<Tabs>` 内，内容与标签之间保留空行以保证 Markdown 正常解析。
+
+### CardGrid / Card — 卡片
+
+```mdx
+<CardGrid>
+<Card title="特性" icon="ph:star">
+卡片的描述文字。
+</Card>
+<Card title="另一个特性" icon="ph:rocket">
+另一张卡片。
+</Card>
+</CardGrid>
+```
+
+`icon` 使用 [Phosphor 图标](https://phosphoricons.com)，格式为 `ph:<glyph>`。
+
+### Steps / Step — 步骤
+
+```mdx
+<Steps>
+<Step title="第一步">
+
+该步骤的操作内容。
+
+</Step>
+<Step title="第二步">
+
+另一个步骤。
+
+</Step>
+</Steps>
+```
+
+### PackageManagers — 包管理器命令
+
+```mdx
+<PackageManagers type="add" pkg="astro-icon" />
+
+<PackageManagers type="run" args="dev" />
+```
+
+- `type` 支持 `add` / `create` / `dlx` / `exec` / `install` / `remove` / `run`。
+- 生成器自动换算各包管理器的命令，读者可切换 npm / pnpm / yarn / bun。
+
+### Render — 引用共享内容
+
+需要复用的片段放在 `src/content/partials/`，用 `<Render>` 引用，**不要直接 `import` 其他 `.mdx` 文件**。
+
+```mdx
+<Render file="shared-tips" />
+```
+
+## 图标
+
+需要使用图标时，在文件顶部导入 `Icon` 组件，再按需使用：
+
+```mdx
+import { Icon } from "astro-icon/components";
+
+<Icon name="ph:rocket" class="w-4 h-4" />
+```
+
+<Aside type="tip" title="图标风格">
+全站图标统一使用 Phosphor（`ph:` 前缀），不要混用其他图标集，保持视觉一致。
+</Aside>
+
+## 写作规范
+
+- 标题层级从 H2 开始，避免跳过层级。
+- 长段落拆分为短段落 + 列表，提升可读性。
+- 代码块标注语言；行内代码使用反引号包裹。
+- 涉及流程用 `<Steps>`，并列示例用 `<Tabs>`，要点罗列用 `<CardGrid>`。
+- 新增页面后运行 `pnpm build`，确认无 schema 或内部链接错误。
+
+## 小结
+
+- 页面以 Frontmatter 开头，`title` 必填，正文不重复写 H1。
+- Markdown 语法完全可用，组件标签可直接书写。
+- 组件需为大驼峰并注册在 `src/components.ts`，否则构建报错。
+- 共享片段用 `<Render file="..." />`，图标统一用 `ph:` 前缀。

@@ -1,0 +1,79 @@
+---
+title: "调用外部包中的代码"
+sidebar:
+  order: 5
+---
+
+# 引言
+
+<Info>
+  当你需要你的代码执行一些可能已被其他人实现的功能时，你可以寻找一个包含你可以在你的代码中使用的函数的软件包。
+
+  您可以使用 [pkg.go.dev](http://pkg.go.dev) 网站查找已发布的模块，这些模块的包中包含您可以在自己的代码中使用的函数。包以模块的形式发布，`rsc.io/quote`供其他人使用。模块会随着时间的推移不断更新，您可以升级代码以使用改进后的版本。
+</Info>
+
+# 使用
+
+以 GoLang 教程中的 `quote` 为例子：
+
+<Steps>
+  <Step title="打开 hello.go">
+    粘贴代码：
+
+    ```go
+    package main
+    
+    import "fmt"
+    
+    import "rsc.io/quote"
+    
+    func main() {
+        fmt.Println(quote.Go())
+    }
+    ```
+  </Step>
+  <Step title="设置中国大陆代理（可选）">
+    ```text
+    # 1. 七牛 CDN
+    go env -w  GOPROXY=https://goproxy.cn,direct
+    ```
+
+    ```shellscript
+    # 2. 阿里云
+    go env -w GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
+    ```
+  </Step>
+  <Step title="处理导入的模块到 go.mod">
+    运行：
+
+    ```shellscript
+    go mod tidy
+    ```
+
+    输出：
+
+    ```text
+    $ go mod tidy
+    go: finding module for package rsc.io/quote
+    go: found rsc.io/quote in rsc.io/quote v1.5.2
+    ```
+
+    此为导入包模块到 `go.mod`.
+  </Step>
+  <Step title="运行你的代码，查看你调用的函数生成的消息。">
+    ```text
+    $ go run .
+    Don't communicate by sharing memory, share memory by communicating.
+    ```
+  </Step>
+</Steps>
+
+## 在此函数中
+
+此处导入 `quote` 函数，在 `fmt.Println()` 方法中使用 `quote.Go()` 函数。
+
+由此`fmt.Println()` 方法可以嵌套使用函数。
+
+## 参考
+
+[https://golang.google.cn/doc/tutorial/getting-started](https://golang.google.cn/doc/tutorial/getting-started)

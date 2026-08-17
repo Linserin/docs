@@ -1,0 +1,193 @@
+---
+title: "json - Go 中的 JSON 操作"
+sidebar:
+  order: 14
+---
+
+## Intro
+JSON 常作为 API 接口之间互动的数据编码方式。Go 内置了 JSON 库进行操作。
+
+JSON 也为下一部分网络交互中提供了交互基础。
+### 解析 JSON
+```json
+{
+  "ip": "8.8.8.8",
+  "asn": "AS15169",
+  "as_name": "Google LLC",
+  "as_domain": "google.com",
+  "country_code": "US",
+  "country": "United States",
+  "continent_code": "NA",
+  "continent": "North America"
+}
+```
+以上方 JSON 为例子，开始解析。
+#### 结构
+```go
+type IPInfo struct {
+    IP            string `json:"ip"`
+    ASN           string `json:"asn"`
+    ASName        string `json:"as_name"`
+    ASDomain      string `json:"as_domain"`
+    CountryCode   string `json:"country_code"`
+    Country       string `json:"country"`
+    ContinentCode string `json:"continent_code"`
+    Continent     string `json:"continent"`
+}
+```
+
+此处可以理解为定义一种变量结构格式，在接下来的解析 JSON 的过程，就是将 JSON String 套入这个结构中。
+#### 解析 JSON 序列
+假设 JSON 数据位于字符串 `jsonStr`:
+```go
+jsonStr := `{
+    "ip": "8.8.8.8",
+    "asn": "AS15169",
+    "as_name": "Google LLC",
+    "as_domain": "google.com",
+    "country_code": "US",
+    "country": "United States",
+    "continent_code": "NA",
+    "continent": "North America"
+}`
+
+var info IPInfo
+err := json.Unmarshal([]byte(jsonStr), &info)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+这样就解析完成了，存储在 `info` 变量里面。
+#### 从解析的结构中读取
+在此处以 `fmt.Printf()` 作为直接的读取方式
+```go
+fmt.Printf("IP: %s, Country: %s\n", info.IP, info.Country)
+```
+- - -
+完整代码：
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+)
+
+type IPInfo struct {
+	IP            string `json:"ip"`
+	ASN           string `json:"asn"`
+	ASName        string `json:"as_name"`
+	ASDomain      string `json:"as_domain"`
+	CountryCode   string `json:"country_code"`
+	Country       string `json:"country"`
+	ContinentCode string `json:"continent_code"`
+	Continent     string `json:"continent"`
+}
+
+func main() {
+	jsonStr := `{
+    "ip": "8.8.8.8",
+    "asn": "AS15169",
+    "as_name": "Google LLC",
+    "as_domain": "google.com",
+    "country_code": "US",
+    "country": "United States",
+    "continent_code": "NA",
+    "continent": "North America"
+}`
+	var info IPInfo
+	err := json.Unmarshal([]byte(jsonStr), &info)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("IP: %s, Country: %s\n", info.IP, info.Country)
+}
+
+```
+### 将 JSON 序列化
+使用 `json.Marshal` 或 `json.MarshalIndent` 将结构体转换回 JSON 格式。
+
+<Info>
+  `json.Marshal` 为紧凑格式，没有缩进。`json.MarshalIndent` 为有缩进格式，方便阅读。
+</Info>
+
+接下来以 Quad9 的 `9.9.9.9` 的 IP 地址为输出目标：
+```json
+{
+  "ip": "9.9.9.9",
+  "asn": "AS19281",
+  "as_name": "Quad9",
+  "country": "USA",
+  "continent": "North America"
+}
+```
+#### 定义结构体
+上方 JSON 数据有五项，我们分别进行定义。
+```go
+type IPInfo struct {
+    IP            string `json:"ip"`
+    ASN           string `json:"asn"`
+    ASName        string `json:"as_name"`
+    Country       string `json:"country"`
+    Continent     string `json:"continent"`
+}
+```
+#### 设定内容
+```go
+var info IPInfo
+info.IP = '9.9.9.9'
+info.ASN = 'AS19281'
+info.ASName = 'Quad9'
+info.Country = 'USA'
+info.Continent = 'North America'
+```
+#### JSON 序列化
+```go
+OutJSON, err := json.MarshalIndent(info, "", "  ")
+if err != nil {
+    log.Fatalf(err)
+}
+```
+这个时候就已经完成了序列化的操作。但是如果你直接 `fmt.Println` 会发现此时打印出来的不是 JSON 数据。
+
+这个时候要作为字符串打印才对。
+
+使用:
+```go
+fmt.Println(string(OutJSON))
+```
+这样就能打印出来了。
+
+#### 完整代码
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type IPInfo struct {
+	IP        string `json:"ip"`
+	ASN       string `json:"asn"`
+	ASName    string `json:"as_name"`
+	Country   string `json:"country"`
+	Continent string `json:"continent"`
+}
+
+func main() {
+	var info IPInfo
+	info.IP = "9.9.9.9"
+	info.ASN = "AS19281"
+	info.ASName = "Quad9"
+	info.Country = "USA"
+	info.Continent = "North America"
+	OutJSON, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(OutJSON))
+}
+```

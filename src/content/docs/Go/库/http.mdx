@@ -1,0 +1,156 @@
+---
+title: "http - Go 标准库的使用"
+sidebar:
+  order: 16
+---
+## Intro
+通过 [net/http](https://pkg.go.dev/net/http) 可以实现对开放 API 发起请求。
+
+
+下面以 [IPInfo Lite](https://ipinfo.io/developers/lite-api) 为例子。
+
+### 发起 GET 请求
+我们以获取 8.8.8.8 的 IP 信息为例子，发起一个 API 请求。
+
+请求目标端点：https://api.ipinfo.io/lite/8.8.8.8?token=abcdefg
+此处 Token 请自行获取，或者填入我的一个临时邮箱注册的
+```
+https://api.ipinfo.io/lite/8.8.8.8?token=a7a25824d08678
+```
+- - -
+
+请求方法：GET
+
+期望回复格式：
+```json
+{
+  "ip": "8.8.8.8",
+  "asn": "AS15169",
+  "as_name": "Google LLC",
+  "as_domain": "google.com",
+  "country_code": "US",
+  "country": "United States",
+  "continent_code": "NA",
+  "continent": "North America"
+}
+```
+那么就可以按照这样使用：
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+)
+
+func main() {
+	resp, err := http.Get("https://ipinfo.io/widget/demo/8.8.8.8")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	content, err := io.ReadAll(resp.Body)
+	fmt.Println(string(content))
+}
+```
+
+### 发起 POST 请求
+
+此处可以打开 https://webhook.site 来进行测试。
+
+假设 POST 端点为：`https://webhook.site/3beb0729-45bf-4b5f-9f45-13038bd1afbd` ,开始进行演示。
+#### POST 数据
+如果要 POST 例如 JSON 或者纯文本等数据，应该使用 `http.Post` 方法。
+
+<Aside type='tip'>
+  此时应该要定义 `Content-Type` 以及请求体。
+</Aside>
+
+我们尝试先组装这个 JSON, 然后将其 POST 到端点。
+
+示例：
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+      "net/http"
+      "bytes"
+      "io"
+)
+type IPInfo struct {
+	IP        string `json:"ip"`
+	ASN       string `json:"asn"`
+	ASName    string `json:"as_name"`
+	Country   string `json:"country"`
+	Continent string `json:"continent"`
+}
+
+func main() {
+	var info IPInfo
+	info.IP = "9.9.9.9"
+	info.ASN = "AS19281"
+	info.ASName = "Quad9"
+	info.Country = "USA"
+	info.Continent = "North America"
+
+	OutJSON, err := json.MarshalIndent(info, "", "")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(OutJSON))
+      url := "https://httpbin.org/post"
+      fmt.Print("POST to ",url,"\n")
+      resp, err := http.Post(url,"application/json", bytes.NewBuffer(OutJSON))
+      if err != nil {
+          fmt.Println(err)
+          return
+        }
+        // 确保关闭响应体，防止资源泄露
+      defer resp.Body.Close()
+      content, err := io.ReadAll(resp.Body)
+      fmt.Println(string(content))
+
+}
+
+```
+结果如下：
+```shell
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+{
+"ip": "9.9.9.9",
+"asn": "AS19281",
+"as_name": "Quad9",
+"country": "USA",
+"continent": "North America"
+}
+POST to https://httpbin.org/post
+{
+  "args": {}, 
+  "data": "{\n\"ip\": \"9.9.9.9\",\n\"asn\": \"AS19281\",\n\"as_name\": \"Quad9\",\n\"country\": \"USA\",\n\"continent\": \"North America\"\n}", 
+  "files": {}, 
+  "form": {}, 
+  "headers": {
+    "Accept-Encoding": "gzip", 
+    "Content-Length": "105", 
+    "Content-Type": "application/json", 
+    "Host": "httpbin.org", 
+    "User-Agent": "Go-http-client/2.0", 
+    "X-Amzn-Trace-Id": "Root=1-6a828d53-278491ae3080304334a058d7"
+  }, 
+  "json": {
+    "as_name": "Quad9", 
+    "asn": "AS19281", 
+    "continent": "North America", 
+    "country": "USA", 
+    "ip": "9.9.9.9"
+  }, 
+  "origin": "::1", 
+  "url": "https://httpbin.org/post"
+}
+
+```
+\* 上方 `origin` 部分已经修改为了 Loopback Address。

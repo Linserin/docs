@@ -1,0 +1,140 @@
+---
+title: "time - Go 中时间标准库的使用"
+sidebar:
+  order: 13
+---
+## Intro
+
+在 GoLang, 内置的 [time](https://pkg.go.dev/time) 为处理时间提供了方法。
+
+> 时间包提供测量和显示时间的功能。
+>
+>
+>日历计算始终基于公历，不设闰秒。
+>
+>
+>操作系统同时提供“墙钟”（会因时钟同步而发生变化）和“单调时钟”（不会发生变化）。
+>
+>
+>
+本软件包并未拆分 API，而是将 ` time.Now`返回的 `Time` 对象同时包含墙钟读数和单调时钟读数；后续的报时操作使用墙钟读数，而后续的计时操作（特别是比较和减法）则使用单调时钟读数。
+
+下方是示例。
+### 获取时间
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	now := time.Now()            // 返回本地时区的当前时间
+	fmt.Println(now)             // 2026-01-01 00:00:00.123456789 +0800 CST m=+0.000046490
+	fmt.Println(now.Unix())      // 秒级时间戳
+	fmt.Println(now.UnixMilli()) // 毫秒级时间戳
+	fmt.Println(now.UnixNano())  // 纳秒级时间戳
+}
+
+```
+
+其理应输出为
+```
+2026-08-15 09:45:03.410643554 +0800 CST m=+0.000046490
+1786758303
+1786758303410
+1786758303410643554
+```
+
+### 格式化
+Go 可以按照指定的格式输出时间。
+
+<Info>
+  Go 中格式化模板不是常见的 yyyy-mm-dd 这类，而是以 Go 诞生时间为模板。Go 的诞生的时间是 2006 年 1 月 2 日下午 15 点 04 分。
+</Info>
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	now := time.Now()
+	fmt.Println(now.Format("2006-01-02 15:04:05 Monday Jan"))
+}
+
+```
+其输出为:
+```
+2026-08-15 09:27:08 Saturday Aug1
+```
+
+### 获取 Unix 时间戳
+<Card type="Info" title="了解时间戳">
+[时间戳](https://en.wikipedia.org/wiki/Timestamp) 是一组字符序列或编码信息.
+</Card>
+
+使用 `time.Now().Unix()` 来获取 Unix 时间戳能够测定一段时间，起到秒表/倒计时的效果。
+
+### sleep
+`time.Sleep()` 可以挂起当前进程一定的时间，期间将被阻塞，直到恢复运行状态。
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	start := time.Now()
+	fmt.Println(start)
+	time.Sleep(time.Second * 2)
+	end := time.Now()
+	fmt.Println(end)
+}
+```
+
+上方代码输出结果参考：
+```
+2009-11-10 23:00:00 +0000 UTC m=+0.000000001
+2009-11-10 23:00:02 +0000 UTC m=+2.000000001
+```
+## 时间单位参考
+`time` 包中使用 `int64` 来存储时间。
+
+此外，` time.Duration` 可以作为变量类型来定义变量。
+```go
+var d time.Duration = 1000000000
+```
+<Info>
+这里没有单位，代表 10 亿 纳秒
+</Info>
+For Example:
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	var d time.Duration = 1000000000
+	fmt.Println(d)
+
+	fmt.Println(time.Second)
+	fmt.Println(int64(time.Second))
+}
+```
+输出为
+```
+1s
+1s
+1000000000
+```

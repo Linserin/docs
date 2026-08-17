@@ -1,0 +1,215 @@
+---
+title: Astro 内容索引陈旧条目问题
+description: 重命名 / 删除内容文件后，.astro/content-modules.mjs 残留已删除文件的 import，导致 Vite 报 Failed to load url。
+sidebar:
+  order: 109
+---
+
+重命名 `src/content/docs/the-otp.mdx` → `otp.mdx` 后，开发服务器直接抛错：
+
+<Aside type="danger" title="报错">
+  `Error: Failed to load url /src/content/docs/the-otp.mdx?astroPropagatedAssets … in .astro/content-modules.mjs. Does the file exist?`
+</Aside>
+
+其本质是 `.astro/content-modules.mjs`（内容模块索引）在删除 / 重命名后**残留了已删除文件的条目**，Vite 每次解析该条目都要加载一个不存在的文件。
+
+## 现象
+
+用 `vite-plugin-watch-debug.ts` 抓到的日志（`astro.log`）关键片段：
+
+- `add` 新文件 `otp.mdx` → glob loader 增量 `store.set`
+- `unlink` 旧文件 `the-otp.mdx` → glob loader 增量 `store.delete`
+- 索引重写日志为 `共 25 个条目（新增 1，移除 0）`——**新增了 otp，却没移除 the-otp**
+- `[索引] !! 条目引用的文件不存在：src/content/docs/the-otp.mdx`
+- 随后 Vite 尝试加载该条目 → `Failed to load url`，页面渲染 `/the-otp/` 报错
+
+数据侧（`.astro/data-store.json`）是**正确**的——the-otp 已被删除；只有模块索引（`content-modules.mjs`）没有同步清理。
+
+## 原因
+
+<Steps>
+  <Step title="glob loader 的增量删除是走 store.delete">
+    `astro/dist/content/loaders/glob.js` 在 `unlink` 事件里调用 `store.delete(id)`，该删除只作用于数据层 `_collections`（所以 `data-store.json` 正确）。
+  </Step>
+  <Step title="模块索引 `#moduleImports` 只会被 add，不会被 remove">
+    `MutableDataStore#moduleImports` 只通过 `addModuleImport()`（`store.set` 时）增长，`delete/clear/clearAll` 从不清理它。
+  </Step>
+  <Step title="writeModuleImports 不重建">
+    `writeModuleImports()` 直接序列化 `#moduleImports` 落盘，不做「按 _collections 重建」，于是旧条目永远留在 `content-modules.mjs`。
+  </Step>
+</Steps>
+
+### 关键结论：上游 astro 从未修复
+
+| 版本 | 是否有 `#rebuildModuleImports` | 结果 |
+|---|---|---|
+| 全局 astro 7.1.6（日志所用） | 无 | 残留 → 报错 |
+| 官方 astro 7.2.0（unpkg 源码） | 无 | 残留 → 报错 |
+| astro 上游 main 分支 | 无 | 残留 → 报错 |
+| 本地 `node_modules/astro@7.2.0` | **有（手动打补丁）** | 正确 |
+
+所以「升级到新版本」并不能解决问题——官方 7.2.0 与 main 分支的 `MutableDataStore.delete()/clear()/clearAll()` 都**不触发**模块索引重写，`writeModuleImports()` 也**不重建** `#moduleImports`。本地那份 7.2.0 之所以正确，是因为被手动补丁了（补丁未持久化，`pnpm install` 后会丢）。
+
+## 可能的修复方案
+
+### 方案 A：用 pnpm patch 把补丁固化到项目依赖（根因）
+
+把当前手动修改固化为正式补丁：
+
+<Tabs>
+  <TabItem label="补丁内容">
+    ```diff
+    delete(collectionName, key) {
+      const collection = this._collections.get(collectionName);
+      if (collection) {
+        collection.delete(String(key));
+        this.#saveToDiskDebounced();
+        this.#writeAssetsImportsDebounced();
+    +   this.#writeModulesImportsDebounced();
+      }
+    }
+
+    clear(collectionName) {
+      this._collections.delete(collectionName);
+      this.#saveToDiskDebounced();
+      this.#writeAssetsImportsDebounced();
+    + this.#writeModulesImportsDebounced();
+    }
+
+    clearAll() {
+      this._collections.clear();
+      this.#saveToDiskDebounced();
+      this.#writeAssetsImportsDebounced();
+    + this.#writeModulesImportsDebounced();
+    }
+
+    + #rebuildModuleImports() {
+    +   this.#moduleImports.clear();
+    +   for (const collection of this._collections.values()) {
+    +     for (const entry of collection.values()) {
+    +       const typedEntry = entry;
+    +       if (typedEntry.deferredRender && typedEntry.filePath) {
+    +         const id = contentModuleToId(typedEntry.filePath);
+    +         if (id) this.#moduleImports.set(typedEntry.filePath, id);
+    +       }
+    +     }
+    +   }
+    + }
+
+    async writeModuleImports(filePath) {
+      this.#modulesFile = filePath;
+    + this.#rebuildModuleImports();
+      …
+    }
+    ```
+  </TabItem>
+  <TabItem label="操作">
+    ```bash
+    pnpm patch astro
+    # 修改 node_modules 中的 mutable-data-store.js 后执行：
+    pnpm patch-commit <path>
+    # 生成 patches/astro@7.2.0.patch，登记进 package.json patchedDependencies
+    # 之后统一用 pnpm dev 启动
+    ```
+  </TabItem>
+</Tabs>
+
+### 方案 B：升级并补丁全局 astro
+
+`npm i -g astro@7.2.0` 后对全局 `lib/node_modules/astro/dist/content/mutable-data-store.js` 套用同样的 5 处修改，让习惯的 `astro dev` 也走修复版。注意：再次 `npm i -g` 会丢，需在 `AGENT.md` 记录。
+
+### 方案 C：Vite 插件层兜底（与版本无关，重装不丢）——已实现 ✅
+
+与其 patch node_modules，不如让 `vite-plugin-watch-debug.ts` 自己充当补丁：监听 Vite 传递的 watcher 事件，事件停歇后直接重写 `.astro/content-modules.mjs`，剔除引用文件已不存在的条目。
+
+<Steps>
+  <Step title="监听">
+    订阅 `server.watcher` 的 `add / change / unlink / addDir / unlinkDir`（重命名 = `unlink` + `add`），并跟踪 `content-modules.mjs` 每次重写。
+  </Step>
+  <Step title="防抖">
+    事件停歇 `800ms`（必须大于 astro 的 `500ms` 写入防抖）后执行清理，避免和 astro 自己的写入抢文件。
+  </Step>
+  <Step title="重写索引">
+    解析 `content-modules.mjs` 每行 `import("…?fileName=…")`，源文件已不存在的条目直接剔除；原子写（先 `.purge.tmp` 再 `rename`）。
+  </Step>
+  <Step title="兜底">
+    `resolveId` 对「源文件不存在的 `astro:content-layer-deferred-module`」返回空虚拟模块，清理完成前的窗口期也不抛 `Failed to load url`。
+  </Step>
+</Steps>
+
+<Aside type="tip" title="为什么不用 contentLayer.sync()">
+  曾尝试监听事件后调用内容层的 `sync()` 全量重建，但未打补丁的 astro 中 `writeModuleImports()` 只序列化只增不减的 `#moduleImports`，全量 sync 反而会把残留条目原样写回磁盘——所以 sync 治不了这个病，直接修磁盘索引文件才可靠。且 `sync()` 依赖与运行中的 astro 是同一模块实例，全局 / 项目两份 astro 共存时极易取错单例。
+</Aside>
+
+## 验证
+
+```bash
+astro dev   # 全局或项目 astro 均可
+# 重命名或删除 src/content/docs/xxx.mdx 后观察终端：
+#   [索引] !! 条目引用的文件不存在：xxx.mdx      ← 检测到残留
+#   [索引清理] 移除过期条目 xxx.mdx              ← 已剔除
+#   [索引清理] 已从 content-modules.mjs 剔除 1 个过期条目
+# 页面表现：旧 URL 干净 404，而非 500 / Failed to load url
+```
+
+实测（全局 astro 7.1.6）：`_tmp-test.mdx → _tmp-test2.mdx` 重命名后索引自动收敛，磁盘 `content-modules.mjs` 只剩新名；直接删除同样收敛。
+
+## 向 Astro 上游提 PR
+
+根因在 astro 源码 `packages/astro/src/content/mutable-data-store.ts`：`#moduleImports` 只被 `addModuleImport()` 增长，`delete() / clear() / clearAll()` 不触发模块索引重写，`writeModuleImports()` 也不按 `_collections` 重建。
+
+<Tabs>
+  <TabItem label="修复内容">
+    ```diff
+    delete(collectionName, key) {
+      const collection = this._collections.get(collectionName);
+      if (collection) {
+        collection.delete(String(key));
+        this.#saveToDiskDebounced();
+        this.#writeAssetsImportsDebounced();
+    +   this.#writeModulesImportsDebounced();
+      }
+    }
+    # clear() / clearAll() 同样加一行 #writeModulesImportsDebounced()
+
+    + #rebuildModuleImports() {
+    +   this.#moduleImports.clear();
+    +   for (const collection of this._collections.values()) {
+    +     for (const entry of collection.values()) {
+    +       if (entry.deferredRender && entry.filePath) {
+    +         const id = contentModuleToId(entry.filePath);
+    +         if (id) this.#moduleImports.set(entry.filePath, id);
+    +       }
+    +     }
+    +   }
+    + }
+
+    async writeModuleImports(filePath) {
+      this.#modulesFile = filePath;
+    + this.#rebuildModuleImports();
+      …
+    }
+    ```
+  </TabItem>
+  <TabItem label="提交流程">
+    ```bash
+    # 1. fork https://github.com/withastro/astro 并克隆
+    git clone git@github.com:<you>/astro.git && cd astro
+    # 2. 新建分支（用 pnpm 装依赖、先跑一遍内容层测试确认基线）
+    git checkout -b fix/stale-content-module-imports
+    pnpm install
+    # 3. 修改 packages/astro/src/content/mutable-data-store.ts（如上 diff）
+    # 4. 补测试：删除 / 重命名 entry 后 writeModuleImports 不再包含旧文件
+    # 5. 生成 changeset（修复类，minor）
+    pnpm changeset
+    # 6. 提交并推送，PR 描述里写清复现步骤与报错原文
+    git add -A && git commit -m "fix(content-layer): rebuild module imports on entry delete"
+    git push -u origin fix/stale-content-module-imports
+    gh pr create --title "fix(content-layer): remove stale deferred module imports after delete/rename"
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note" title="PR 里的复现说明">
+  直接贴本页面的报错与 `[索引清理]` 日志即可：重命名 / 删除 `src/content/docs/*.mdx` 后，`.astro/content-modules.mjs` 残留旧条目，Vite 报 `Failed to load url ... in .astro/content-modules.mjs`。这是极好的上游 PR 素材——插件方案只是本项目内的 workaround，根治要靠上游。
+</Aside>

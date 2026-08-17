@@ -6,6 +6,14 @@ sidebar:
 
 Go 把错误处理做成基于返回值的设计是 Go 最鲜明的语言特色之一。
 
+## 打印错误
+常见的方法是直接在可能出错误的函数后加入判断 `err` 变量是否为空。
+```go
+if err != nil {
+    fmt.Println(err)
+    return
+}
+```
 ## 创建错误
 
 可以通过 `error` 库的 `errors.New` 来实现创建错误。

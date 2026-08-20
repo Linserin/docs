@@ -18,7 +18,15 @@ export const getStaticPaths = getDocsStaticPaths;
 
 const { entry, Content, headings } = await getDocsPageProps(Astro);
 
-const currentSlug = Astro.url.pathname.replace(/\/$/, "") || "/";
+
+const currentSlug = (() => {
+  const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+    try {
+      return decodeURIComponent(path);
+    } catch {
+      return path;
+    }
+})();
 
 const { sidebar: sidebarOn, tableOfContents: tocOn } = await getRouteFlags(entry);
 

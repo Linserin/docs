@@ -210,6 +210,24 @@ const hasPagination = Astro.slots.has("pagination");
                 )}
                 <article class="docs-content max-w-none">
                   <slot />
+<hr>
+<script src="https://giscus.app/client.js"
+        data-repo="Linserin/docs"
+        data-repo-id="R_kgDOSBnBDg"
+        data-category="General"
+        data-category-id="DIC_kwDOSBnBDs4DERVX"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+
                 </article>
                 {hasContentFooter ? (
                   <slot name="content-footer" />
@@ -224,6 +242,7 @@ const hasPagination = Astro.slots.has("pagination");
               </div>
               {hasPagination ? <slot name="pagination" /> : <Pagination prevNext={prevNext} />}
             </div>
+
           </main>
 
           {headings !== false && (hasToc || headings.length > 0) && (
@@ -346,5 +365,6 @@ const hasPagination = Astro.slots.has("pagination");
       };
     });
   </script>
+
 
 </BaseLayout>

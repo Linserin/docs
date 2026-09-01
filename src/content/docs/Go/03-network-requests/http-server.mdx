@@ -1,0 +1,145 @@
+---
+title: "通过 net/http 创建 HTTP 服务器"
+sidebar:
+  order: 1
+---
+## 快速开始
+基本 HTTP 服务器有几个关键任务需要处理。
+
+- 处理来自特定路径的请求。
+- 向浏览器提供文件系统中的 JavaScript、CSS 和图片。
+
+### 处理自定义路由请求
+使用 `http.HandleFunc` 函数注册一个新处理程序。它的第一个参数采用一个匹配路径，采用一个函数作为第二个参数。在匹配到这个路由的时候，就会调用这个函数。
+
+下方为示例代码：
+
+```go
+package main
+import (
+   "fmt"
+   "net/http"
+)
+func main() {
+   // 路由及函数
+   http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+       fmt.Fprintln(w, "pong")
+   })
+   // 监听
+   fmt.Println("Ready to listen 8080 port.")
+   err := http.ListenAndServe(":8080", nil)
+   if err != nil {
+       fmt.Println("Error starting server:", err)
+   }
+}
+```
+此处建立了一个 HTTP 服务器，当访问 `http://[::1]:8080/ping` 或者 `http://localhost:8080/ping` 时，会返回 `pong` 字符串。
+
+容易注意到，调用的函数中传参有两个：
+```
+w http.ResponseWriter
+r *http.Request
+```
+
+`w http.ResponseWriter` 是作为服务器返回给请求方的数据，`r *http.Request` 为请求方传输给服务器的请求信息。
+### `r *http.Request` 的使用
+对于 `r *http.Request`，其的方法/字段如下表，点击右箭头能够快速跳转：
+| 操作目标 | 操作方法 / 字段 | 类型 |
+| :--- | :--- | :--- |
+| **获取请求方法 [→](#返回请求方请求方式)** | `r.Method` | 字段 |
+| **URL 路径 [→](#查询请求路径)** | `r.URL.Path` | 字段 |
+| **查询参数 [→](#url-查询参数)** | `r.URL.Query().Get("key")` | 方法 |
+| **获取指定 Cookie** | `r.Cookie("name")` | 方法 |
+| **获取所有 Cookie** | `r.Cookies()` | 方法 |
+| **获取 Header** | `r.Header.Get("key")` | 方法 |
+| **解析表单** | `r.ParseForm()` | 方法（必须先调用） |
+| **表单值（含 Query）** | `r.Form.Get("key")` | 字段/方法 |
+| **表单值（仅 Body）** | `r.PostForm.Get("key")` | 字段/方法 |
+| **读取原始 Body** | `io.ReadAll(r.Body)` | 字段（Body 是结构体） |
+| **客户端地址** | `r.RemoteAddr` | 字段 |
+| **请求上下文** | `r.Context()` | 方法（用于超时/取消） |
+| **获取文件上传** | `r.FormFile("key")` | 方法 |
+
+下方为示例代码：
+#### 返回请求方请求方式
+```go
+╭─linserin@debian ~/Desktop 
+╰─$ cat play.go;tmux sp;go run play.go            
+package main
+import "fmt"
+import "net/http"
+
+func main(){
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        met := r.Method
+        fmt.Fprintln(w,met)
+    })
+    http.ListenAndServe(":8080", nil)
+
+}
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+╭─linserin@debian ~/Desktop 
+╰─$ curl -d "POST TEST" http://127.0.0.1:8080/    
+POST
+╭─linserin@debian ~/Desktop 
+╰─$ curl http://127.0.0.1:8080/               
+GET
+╭─linserin@debian ~/Desktop 
+╰─$ 
+```
+#### 查询请求路径
+```go
+╭─linserin@debian ~/Desktop 
+╰─$ cat play.go;tmux sp;go run play.go        
+package main
+import "fmt"
+import "net/http"
+
+func main(){
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        met := r.URL.Path
+        fmt.Fprintln(w,met)
+    })
+    http.ListenAndServe(":8080", nil)
+
+}
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                  
+╭─linserin@debian ~/Desktop 
+╰─$ curl http://127.0.0.1:8080/Linserin
+/Linserin
+╭─linserin@debian ~/Desktop 
+╰─$ curl http://127.0.0.1:8080/        
+/
+```
+#### URL 查询参数
+```go
+╭─linserin@debian ~/Desktop 
+╰─$ cat play.go;tmux sp;go run play.go 
+package main
+import "fmt"
+import "net/http"
+
+func main(){
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        met := r.URL.Query().Get("key")
+        fmt.Fprintln(w,met)
+    })
+    http.ListenAndServe(":8080", nil)
+
+}
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                  
+╭─linserin@debian ~/Desktop 
+╰─$ curl 'http://127.0.0.1:8080/?key=123456'
+123456
+╭─linserin@debian ~/Desktop 
+╰─$ curl 'http://127.0.0.1:8080/?key=Linserin'
+Linserin
+```

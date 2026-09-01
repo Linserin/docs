@@ -1,0 +1,42 @@
+---
+title: "各类网线参考"
+sidebar:
+  order: 3
+---
+
+## 各类网线理论速率
+市面上常见网线一般为五类网线类型到八类网线，可以从此页面快速对照查看对应类型的网线的理论速率。
+
+所有新标准网线都向下兼容旧设备。
+
+
+| 条目 | 理论速率 | 传输距离 | 频率 |
+| :--- | :--- | :--- | :--- |
+| 五类线 (CAT5) | 100 Mbps | 100米 | 100 MHz |
+| 超五类线 (CAT5e) | 1 Gbps (1000 Mbps) | 100米 | 100 MHz |
+| 六类线 (CAT6) | 1 Gbps (100米内) / 10 Gbps (55米内) | 100米 | 250 MHz |
+| 超六类线 (CAT6a) | 10 Gbps | 100米 | 500 MHz |
+| 七类线 (CAT7) | 10 Gbps | 100米 | 600 MHz |
+| 八类线 (CAT8) | 25-40 Gbps | 30米 | 2000 MHz |
+
+> 了解更多：[杰哥的知识库](https://jia.je/kb/networking/ethernet.html)
+
+## 网线线序
+网线线序遵循T568A和T568B两种国际标准，正确排列可保证网络稳定和抗干扰。
+> 线序演示图片来自 [thetechmentor.com](https://www.thetechmentor.com/posts/easy-rj45-wiring-with-rj45-pinout-pic/)
+### T568A
+（从左到右，水晶头铜片向上，卡扣向地下）：白绿、绿、白橙、蓝、白蓝、橙、白棕、棕
+![](/images/RJ45-Pinout-T568A-Wiring-diagram.jpg)
+### T568B
+（从左到右）：白橙、橙、白绿、蓝、白蓝、绿、白棕、棕 
+![](/images/RJ-45-Pinout-T-568B-pin-diagram.jpg)
+
+## 交叉线和直通线
+> 在部分成品网线外皮会标明其的类型。但实际上不必精细区分，因为绝大多数设备均支持 Auto-MDIX.[^1]
+
+### 直通线 (Straight-through Cable)
+顾名思义，直通线是网线两侧的水晶头线序遵循同一个标准，颜色也相同。
+### 交叉线 (Crossover Cable)
+网线一端采用 T568A 标准，另一端采用 T568B 标准，本质是发送和接收的线对（1、2 和 3、6）进行了互换。
+
+[^1]: [百度百科](https://baike.baidu.com/item/Auto-MDIX/2603577) | [hp.com](https://www.hp.com/hpinfo/abouthp/iplicensing/automdix.html)

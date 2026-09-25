@@ -1,0 +1,74 @@
+---
+title: "log/slog - Go 中 JSON 式日志实现"
+sidebar:
+  order: 15
+---
+
+## Intro
+
+通过 log/slog 库能够实现简单的 JSON 式日志服务。
+```go
+package main
+
+import (
+    "log/slog"
+    "os"
+)
+
+func main() {
+    // JSON 格式输出到 stdout
+    logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+        Level: slog.LevelDebug, // Level 为 Debug
+    }))
+
+    logger.Debug("DEBUG LOG")
+    logger.Info("INFO LOG")
+    logger.Warn("WARN LOG")
+    logger.Error("ERROR LOG:", "err", "some error")
+
+    logger.Info("INFO", "qwerty", "1.2.3.4")
+}
+```
+
+效果：
+```json
+{"time":"2009-11-10T23:00:00Z","level":"DEBUG","msg":"DEBUG LOG"}
+{"time":"2009-11-10T23:00:00Z","level":"INFO","msg":"INFO LOG"}
+{"time":"2009-11-10T23:00:00Z","level":"WARN","msg":"WARN LOG"}
+{"time":"2009-11-10T23:00:00Z","level":"ERROR","msg":"ERROR LOG:","err":"some error"}
+{"time":"2009-11-10T23:00:00Z","level":"INFO","msg":"INFO","qwerty":"1.2.3.4"}
+```
+
+如果要写入文件：
+```go
+f, err := os.OpenFile("app.json.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+if err != nil {
+    log.Fatal(err)
+}
+defer f.Close()
+
+mw := io.MultiWriter(os.Stdout, f) // 一份数据写两处
+
+logger := slog.New(slog.NewJSONHandler(mw, &slog.HandlerOptions{
+    Level: slog.LevelInfo,
+}))
+slog.SetDefault(logger)
+slog.Debug("THIS DEBUG INFO WILL APPEAR ON CONSOLE AND THE FILE")
+slog.Info("THIS INFO WILL APPEAR ON CONSOLE AND THE FILE")
+slog.Warn("THIS WARN WILL APPEAR ON CONSOLE AND THE FILE")
+slog.Error("THIS ERROR WILL APPEAR ON CONSOLE AND THE FILE")
+```
+效果：
+```shell
+$ go run play.go;echo '- - -';cat app.json.log;rm app.json.log
+
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+{"time":"2026-09-25T22:39:22.695105808+08:00","level":"INFO","msg":"THIS INFO WILL APPEAR ON CONSOLE AND THE FILE"}
+{"time":"2026-09-25T22:39:22.695390094+08:00","level":"WARN","msg":"THIS WARN WILL APPEAR ON CONSOLE AND THE FILE"}
+{"time":"2026-09-25T22:39:22.695416368+08:00","level":"ERROR","msg":"THIS ERROR WILL APPEAR ON CONSOLE AND THE FILE"}
+- - -
+{"time":"2026-09-25T22:39:22.695105808+08:00","level":"INFO","msg":"THIS INFO WILL APPEAR ON CONSOLE AND THE FILE"}
+{"time":"2026-09-25T22:39:22.695390094+08:00","level":"WARN","msg":"THIS WARN WILL APPEAR ON CONSOLE AND THE FILE"}
+{"time":"2026-09-25T22:39:22.695416368+08:00","level":"ERROR","msg":"THIS ERROR WILL APPEAR ON CONSOLE AND THE FILE"}
+```
+还有轮转，以及按照日期分属不同文件等操作...

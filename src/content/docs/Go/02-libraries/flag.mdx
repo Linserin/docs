@@ -1,0 +1,54 @@
+---
+title: "flag - Go 中命令行的解析"
+sidebar:
+  order: 14
+---
+## Intro
+
+在 GoLang, flag 包实现了命令行参数的解析，使得开发命令行工具更为简单。
+## 引入
+```go
+import flag
+```
+支持的命令行参数类型有 bool、int、int64、uint、uint64、float float64、string、duration。
+## 使用
+有以下两种常用的定义命令行flag参数的方法：
+
+[flag.Type(flag, default, help)](#flagtype)
+
+[flag.TypeVar(Type指针, flag, default, help)](#flagtypevar)
+### flag.Type
+```go
+name := flag.String("name", "小明", "你的名字")
+flag.Parse()
+
+fmt.Println(*name) // 注意此处返回指针，应该有个 *，否则直接打印对应地址(e.g. 0xc0000aa050)
+```
+
+
+### flag.TypeVar()
+```go
+flag.TypeVar(Type指针, flag, default, help)
+```
+示例：
+```go
+var name string
+flag.StringVar(&name, "name", "小明", "你的名字")
+flag.Parse()
+
+fmt.Println(name) // 可以直接用的
+```
+## 效果
+```shell
+$ go run play.go;echo '- - -';go run play.go -h;echo '- - -';go run play.go -name Linserin
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+小明
+- - -
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+Usage of /home/linserin/.cache/go-build/c4/cdefg/play:
+  -name string
+    	你的名字 (default "小明")
+- - -
+go: warning: ignoring go.mod in $GOPATH /home/linserin/go
+Linserin
+```

@@ -92,6 +92,23 @@
   scroll-margin-top: 5rem;
 }
 
+/* Footnote targets — the reference's destination (`#user-content-fn-N`) and
+   the back-reference's destination (`#user-content-fnref-N`). Without an
+   offset the browser aligns the target flush with the viewport top, hiding it
+   behind the sticky header. Clear the header plus, below xl, the sticky mobile
+   "jump to section" bar (`top-14`, ~3.75rem tall). */
+.docs-content :where([id^="user-content-fn-"]),
+.docs-content :where([id^="user-content-fnref-"]) {
+  scroll-margin-top: 7.5rem;
+}
+
+@media (min-width: 80rem) {
+  .docs-content :where([id^="user-content-fn-"]),
+  .docs-content :where([id^="user-content-fnref-"]) {
+    scroll-margin-top: 5rem;
+  }
+}
+
 /* Typographic wrapping — balance multi-line headings (no orphan words),
    pretty-wrap body copy (no single-word last lines). Progressive
    enhancement; unsupported browsers ignore both. */

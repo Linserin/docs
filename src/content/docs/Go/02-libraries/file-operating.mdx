@@ -1,0 +1,82 @@
+---
+title: " Files 文件操作"
+sidebar:
+  order: 18
+---
+
+
+## Intro
+文件操作在 Go 中十分常见，除去前面提到过的 [通过 os 读取文件到切片](/go/02-libraries/os/) 之外，还有其它(逐行读取，用 `os.WriteFile` 写入文件等）.
+<Aside>
+需要注意，在完成文件读写等操作之后需要及时 Close 句柄.
+</Aside>
+### 逐行读取（扫描）
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+)
+
+func main() {
+	f, err := os.Open("example.txt")
+	if err != nil {
+		log.Fatalf("failed opening file: %s", err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("scanner error: %s", err)
+	}
+}
+```
+### 写入文件
+将切片写入文件
+```go
+package main
+
+import (
+	"log"
+	"os"
+)
+
+func main() {
+	content := []byte("Hello, World!\n")
+	err := os.WriteFile("example.txt", content, 0644)
+	if err != nil {
+		log.Fatalf("failed writing to file: %s", err)
+	}
+}
+```
+### 追加内容
+```go
+package main
+
+import (
+	"log"
+	"os"
+)
+
+func main() {
+	f, err := os.OpenFile("example.txt", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("failed opening file: %s", err)
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString("Appended content\n"); err != nil {
+		log.Fatalf("failed writing to file: %s", err)
+	}
+}
+```
+
+## 参考
+https://go-cookbook.com/snippets/files/reading-writing-files

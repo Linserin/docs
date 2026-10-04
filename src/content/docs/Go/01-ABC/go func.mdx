@@ -1,0 +1,57 @@
+---
+title: "go func (){}() 的使用"
+sidebar:
+  order: 18
+---
+
+## 引言
+
+<Info title=" ">
+  Go 中 `go func (){}()` 允许你在函数中定义并立即调用一个匿名函数。这种方式在处理并发任务时尤其有用，因为它可以让你在一个独立的 goroutine 中执行代码，而不需要显式地定义一个命名函数。
+  通常会通过 Channel 来进行通信和同步，进行数据的安全传递和处理。
+</Info>
+## 最小示例
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // 创建 channel 以通信
+    ch := make(chan string)
+
+    // 使用匿名函数启动一个 goroutine
+    go func() {
+        time.Sleep(2 * time.Second) // 操作...
+        ch <- "Hello from goroutine!" // 发送到 channel
+    }()
+
+    // 主 goroutine 等待接收数据
+    msg := <-ch
+    fmt.Println(msg)
+}
+```
+
+运行：
+```
+$ go run main.go
+Hello from goroutine!
+```
+
+## 解析
+在这里，主 goroutine 创建了一个 channel `ch`，然后启动了一个新的 goroutine，该 goroutine 使用匿名函数来执行一些操作。
+
+当操作完成后，它将结果发送到 channel。主 goroutine 则等待接收这个结果，并打印出来。
+
+在这里的主 goroutine 和匿名 goroutine 之间是阻塞的，因为主 goroutine 会等待接收 channel 中的数据，直到匿名 goroutine 完成并发送数据为止。
+
+常见的应用如在 TUI 中，主 goroutine 负责 TUI 等的部分（界面或者输入，逻辑），而匿名 goroutine 则负责处理耗时的操作（如网络请求、文件读取等），并通过 channel 将结果传回主 goroutine。
+
+<Aside type="Info" title=" ">
+  需要注意，这里不是异步的，主 goroutine 会阻塞等待匿名 goroutine 的结果。
+</Aside>
+
+对于匿名函数，你还可以直接像调用普通函数一样传递变量，此处不再多述

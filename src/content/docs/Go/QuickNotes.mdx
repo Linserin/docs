@@ -1,0 +1,39 @@
+---
+title: Quick Notes
+sidebar:
+  order: 100
+---
+
+## 字符串操作
+### 判断字符串是否以特定前缀开头
+```go
+if strings.HasPrefix(str, "Start With..."){fmt.Println("Yes!")}
+```
+### 判断字符串是否以特定前缀结尾
+```go
+if strings.HasSuffix(str, "Start With..."){fmt.Println("Yes!")}
+```
+### 判断包含
+```go
+if strings.Contains(str, "Contains..."){fmt.Println("Yes!")}
+```
+<Aside type="Info" title="提示">
+如果 *需要寻找的内容* 为空字符串，那么一定返回 `true`.
+
+如果 `str` 为空字符串，返回 `false`.
+```go
+strings.HasPrefix("", "")      // true
+strings.HasPrefix("", "a")     // false
+
+strings.HasSuffix("", "")      // true
+strings.HasSuffix("", "a")     // false
+
+strings.Contains("", "")       // true
+strings.Contains("", "a")      // false
+```
+此处均区分大小写，如果需要不区分，可以先将其全部转为小写。
+
+```go
+lowerStr := strings.ToLower(str)
+```
+</Aside>

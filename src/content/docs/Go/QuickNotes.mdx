@@ -37,3 +37,40 @@ strings.Contains("", "a")      // false
 lowerStr := strings.ToLower(str)
 ```
 </Aside>
+
+## 读取文件
+### 逐行阅读
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("file.txt")
+	if err != nil {
+		fmt.Println(err)
+		file.Close()
+		os.Exit(1)
+	}
+	sc := bufio.NewScanner(file)
+	sc.Buffer(make([]byte, 64*1024), 1024*1024) // 可选： 限制行大小
+	var line int
+	for sc.Scan() {
+		line++
+		content := sc.Text()
+		fmt.Println(line, ": ", content)
+	}
+	if sc.Err() != nil {
+		fmt.Println(sc.Err())
+		file.Close()
+		os.Exit(1)
+	}
+
+}
+
+```

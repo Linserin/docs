@@ -31,7 +31,7 @@ func main() {
 
 在这里，变量 `i` 被 switch 语句进行判断，其执行过程如下：
 
-<pre class="mermaid">{`
+```mermaid
 flowchart TD
     Start([开始]) --> Init[i := 1]
     Init --> Switch{switch i}
@@ -41,10 +41,10 @@ flowchart TD
     Print1 --> End([结束])
     Print2 --> End
     PrintDefault --> End
-`}</pre>
+```
 
 <Info>
-Mermaid 代码，请在搜索引擎中寻找 `Mermaid Playground` 来查看。
+Mermaid 代码，请在[Mermaid Playground](https://mermaid-viewer.com/zh?code=Zmxvd2NoYXJ0IFRECiAgICBTdGFydChb5byA5aeLXSkgLS0%2BIEluaXRbaSA6PSAxXQogICAgSW5pdCAtLT4gU3dpdGNoe3N3aXRjaCBpfQogICAgU3dpdGNoIC0tPnxjYXNlIDF8IFByaW50MVsiZm10LlByaW50bG4oJ2kgaXMgMScpIl0KICAgIFN3aXRjaCAtLT58Y2FzZSAyfCBQcmludDJbImZtdC5QcmludGxuKCdpIGlzIDInKSJdCiAgICBTd2l0Y2ggLS0%2BfGRlZmF1bHR8IFByaW50RGVmYXVsdFsiZm10LlByaW50bG4oJ2kgaXMgbm90IDEgb3IgMicpIl0KICAgIFByaW50MSAtLT4gRW5kKFvnu5PmnZ9dKQogICAgUHJpbnQyIC0tPiBFbmQKICAgIFByaW50RGVmYXVsdCAtLT4gRW5k) 查看。
 </Info>
 ## `fallthrough` 的使用
 

@@ -10,6 +10,7 @@
     "/go/01-abc/calc",
     "/go/01-abc/error-handling",
     "/go/01-abc/for-for-loop",
+    "/go/01-abc/go-func",
     "/go/01-abc/if",
     "/go/01-abc/include-packages",
     "/go/01-abc/input-and-formatting",
@@ -28,6 +29,7 @@
     "/go/03-network-requests/gin",
     "/go/03-network-requests/http",
     "/go/03-network-requests/http-server",
+    "/go/quicknotes",
     "/hi-there",
     "/misc",
     "/misc/commands",
@@ -40,6 +42,7 @@
     "/references/components",
     "/references/getting-started",
     "/references/mdx-guide",
+    "/references/mermaid",
     "/references/welcome"
   ],
   "opaqueNamespaces": []

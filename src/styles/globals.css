@@ -249,6 +249,7 @@ body {
 /* ---- Scroll lock (used by native <dialog> overlays) ---- */
 [data-scroll-locked] {
 	overflow: hidden;
+	filter:blur(1.5px);
 }
 
 /* ---- Scrollbar ---- */

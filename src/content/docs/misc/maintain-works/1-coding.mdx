@@ -1,0 +1,55 @@
+---
+title: 1. 代码规范
+sidebar:
+  order: 2
+---
+## 函数与变量
+### 命名
+
+> Naming is more art than science.
+>
+> 起名字更像是一门艺术，而不是科学。[^1]
+
+
+函数 / 变量的命名的经典实践参考就是 [驼峰命名法](https://baike.baidu.com/item/%E9%A9%BC%E5%B3%B0%E5%91%BD%E5%90%8D%E6%B3%95/7560610).
+
+<Aside type="note" title="TLDR">
+驼峰命名法通过大小写字母混用来提高可理解性。
+
+具体可参考下方示例。
+</Aside>
+
+以 Go 来示例：
+```go
+// 正确示范
+var itemsCount int
+var apiResponse string
+func jsonToStruct(jsonContent string){...}
+
+// 错误示范
+var nn int// [!code warning]
+var itsum int // [!code warning]
+var giTrEp0aDdR string // [!code error]
+```
+### 封装操作为函数
+如果需要编写的项目需要多次调用特定的一段重复的操作，尽可能将其封装为函数。
+
+在编写时封装到特定的函数会缩减对应操作的代码篇幅，使其模块化。极大地方便对执行过程的控制以及调试。
+<Aside type="tip" title="Tips">
+在主流代码编辑器（ [VS Code](https://code.visualstudio.com/download) 等）中，在鼠标指针悬停来显示调用的函数的说明时，会将定义函数部分前的注释显示，极大地方便理解。（如果该编程语言的扩展支持）
+</Aside>
+
+<Aside type="caution" title="避免 `main` 函数从头写到尾">
+对于十分简单的程序，这里可以先不考虑。
+
+对于实现多个功能的 ~~超过 100 行的~~ 就是非常糟糕的。这将极大增加理解的负担。
+</Aside>
+
+### 注释
+
+如上文，写注释能极大地提高可读性。
+
+## 局部变量？
+视情况使用局部变量，对于使用周期短的就没有必要去用全局了; 对于使用周期稍长的可以设置为全局变量。
+
+[^1]: 出自 Google Style Guideline: https://google.github.io/styleguide/go/guide#naming

@@ -32,7 +32,7 @@ for(init,condition,update){
 }
 ```
 
-```mermaid placement="top-left" actions={false}
+<pre class="mermaid">{`
 flowchart TD
     start([开始]) --> init[执行初始化语句]
     init --> check{判断条件是否为真？}
@@ -40,7 +40,7 @@ flowchart TD
     body --> update[执行更新语句]
     update --> check
     check -- 否 --> finish([结束])
-```
+`}</pre>
 <Info>
  此处代码来自 [OI-Wiki](https://oi-wiki.org/lang/loop/##for-%E8%AF%AD%E5%8F%A5)
 

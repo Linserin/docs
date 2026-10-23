@@ -331,5 +331,5 @@ function setup() {
 	if (diagrams.length > 0) render();
 }
 
-// Fires on initial load and after every client-side navigation.
-document.addEventListener("astro:page-load", setup);
+// This site has no ClientRouter (full-page navigations), so run immediately.
+setup();

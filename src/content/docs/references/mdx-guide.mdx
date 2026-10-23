@@ -182,6 +182,17 @@ MDX 里可以直接写组件标签。**组件必须是大驼峰（PascalCase）�
 <Render file="shared-tips" />
 ```
 
+### Mermaid 组件
+
+参照 [Mermaid Diagrams](/references/mermaid/), Mermaid 代码的插入方式为：
+```mdx
+<pre class="mermaid">{`
+flowchart LR
+  Browser --> Edge --> Origin
+`}</pre>
+```
+
+
 ## 图标
 
 需要使用图标时，在文件顶部导入 `Icon` 组件，再按需使用：

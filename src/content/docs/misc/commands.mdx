@@ -4,11 +4,11 @@ sidebar:
   order: 16
 ---
 
-# Linux Softwares
+## Linux Softwares
 
 基于本人基本只用 Debian 或其衍生系统，因此只保存 Debian 系命令。
 
-## 换源
+### 换源
 
 - [Debian | 镜像站使用帮助 | 清华大学开源软件镜像站 | Tsinghua Open Source Mirror](https://mirrors.tuna.tsinghua.edu.cn/help/debian/)
 - [Debian - USTC Mirror Help](https://mirrors.ustc.edu.cn/help/debian.html)
@@ -17,12 +17,32 @@ sidebar:
 
 以上仅作推荐，高校镜像站的维护者靠兴趣与爱支持，不做 SLA 保证。由于阿里云的文档没有更新，因此不上名单。
 
-```shellscript
+```shell
 sudo apt update
 sudo apt ugrade
-sudo apt install wget curl python3-venv tmux htop vim nano -y
+sudo apt install wget curl python3-venv tmux htop vim nano golang -y
 ```
 
+### 管道
+管道（pipe），操作符 `|`，作用为将符号左边的命令的 stdout 接到之后的命令的 stdin。管道不会处理 stderr。
+<pre class="mermaid">{`
+flowchart LR
+    A[指令1] -->|输出信息| B[指令2] -->|输出信息| C[指令3]
+    classDef instruction fill:#ffffff,stroke:#5b9bd5,stroke-width:3px,color:#ff6699,rx:8px,ry:8px,font-size:20px
+    class A,B,C instruction
+    linkStyle default stroke:#5b9bd5,stroke-width:3px,color:#ff6699
+`}</pre>
+管道是类 UNIX 操作系统中非常强大的工具。通过管道，我们可以将实现各类小功能的程序拼接起来干大事。
+
+示例如下：
+```shell
+$ echo https://bing.com | busybox base64
+aHR0cHM6Ly9iaW5nLmNvbQo=
+
+$ echo https://bing.com | busybox base64 | busybox base64 -d
+https://bing.com
+```
+来源： https://101.lug.ustc.edu.cn/Ch06/#pipe
 ## Android
 
 开启无线 ADB 调试：

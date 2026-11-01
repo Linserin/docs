@@ -47,13 +47,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	data := make([]byte, 100) // 切片类型 (请参阅: http://notes.linserin.work/go/01-abc/variable/#%E5%88%87%E7%89%87slice )
 
-	count, err := file.Read(data)
+	data, err := io.ReadAll(file)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("read %d bytes: %q\n", count, data[:count])
 	defer file.Close() // 完成后 main 在 return 之前把文件 Close.
 }
 ```

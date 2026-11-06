@@ -35,15 +35,22 @@
     "/misc/commands",
     "/misc/identity-authentication",
     "/misc/identity-authentication/jwt",
+    "/misc/maintain-works",
+    "/misc/maintain-works/0-introduction",
+    "/misc/maintain-works/1-coding",
+    "/misc/maintain-works/2-write-docs",
+    "/misc/maintain-works/200-references",
     "/misc/mix-up-spaces",
     "/misc/network-cable",
     "/misc/otp",
+    "/misc/tmux",
     "/references/astro-quickstart",
     "/references/components",
     "/references/getting-started",
     "/references/mdx-guide",
     "/references/mermaid",
-    "/references/welcome"
+    "/references/welcome",
+    "/uno-server"
   ],
   "opaqueNamespaces": []
 }

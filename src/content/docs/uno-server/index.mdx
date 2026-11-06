@@ -209,37 +209,260 @@ via `fmt.Sprint`, not as a JSON object.
 
 ## Original YAML
 ```yaml
-openapi: 3.1.0
+openapi: 3.0.3
 info:
-  title: Encode64 API
+  title: UNO Game Server API
   version: 1.0.0
-  description: Shared converter demo.
+  description: |
+    A UNO card game server written in Go. Manages rooms, player hands, and game actions.
+    Game state is persisted as JSON files per room (`<roomID>.json` for cards, `<roomID>.data.json` for action state).
+
+    Current behavior:
+    - JSON bodies are written without setting a Content-Type header, so responses
+      are actually served as `text/plain; charset=utf-8` even though the body is JSON text.
+    - JSON error responses use the envelope:
+      {"error": "<message>", "status": "bad", "resp": ""}
+    - HTTP status is 200 even on errors.
+    - `/action` returns an empty body on success.
 servers:
-  - url: https://api.encode64.test
-    description: Demo
+  - url: http://localhost:8080
+    description: Local development server
 paths:
-  /health:
+  /ping:
     get:
       summary: Health check
+      description: Returns "pong" followed by a newline.
+      operationId: ping
       responses:
         '200':
-          description: Healthy
+          description: Server is running
           content:
-            application/json:
+            text/plain:
               schema:
-                type: object
-                required:
-                  - ok
-                properties:
-                  ok:
-                    type: boolean
+                type: string
+              examples:
+                pong:
+                  value: "pong\n"
+  /newRoom:
+    get:
+      summary: Create a new UNO room and deal cards
+      description: |
+        Creates a new game room for 2-4 players. Each active player is dealt 7 cards.
+        A random integer in [0, 999] is used as the room ID. The first card of the
+        remaining deck is used as the initial `lastCard`; the current implementation
+        leaves that card in the deck and keeps only it in `repo`.
+      operationId: newRoom
+      parameters:
+        - in: query
+          name: pep
+          required: true
+          schema:
+            type: integer
+            minimum: 2
+            maximum: 4
+          description: Number of players
+      responses:
+        '200':
+          description: |
+            Room created, player number invalid, or `pep` missing/non-numeric.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: JSON text.
+              examples:
+                created:
+                  summary: Room created successfully (`resp` is the new room ID)
+                  value: '{"error":"","status":"ok","resp":"405"}'
+                invalidPlayer:
+                  summary: Invalid player number
+                  value: '{"error":"Invalid Player Number","status":"bad","resp":""}'
+                invalidParam:
+                  summary: Missing or non-numeric `pep`
+                  value: '{"error":"strconv.Atoi: parsing \"\": invalid syntax","status":"bad","resp":""}'
+  /fetchPlayerCards:
+    get:
+      summary: Get a player's cards
+      description: |
+        Returns the card IDs held by the specified player. `resp` is a string
+        containing Go's representation of an integer slice, e.g. `[202 303 405]`.
+      operationId: fetchPlayerCards
+      parameters:
+        - in: query
+          name: roomID
+          required: true
+          schema:
+            type: integer
+          description: Room ID
+        - in: query
+          name: playerID
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+          description: Player ID (1-4)
+      responses:
+        '200':
+          description: Player's cards returned, player ID invalid, or the room file could not be read.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: JSON text.
+              examples:
+                success:
+                  summary: Player cards returned
+                  value: '{"error":"","status":"ok","resp":"[202 303 405 407 103 111 400]"}'
+                invalidPlayer:
+                  summary: Incorrect player ID
+                  value: '{"error":"Incorrect Player ID","status":"bad","resp":""}'
+                roomNotFound:
+                  summary: Room file not found
+                  value: '{"error":"open 999.json: no such file or directory","status":"bad","resp":""}'
+                invalidParam:
+                  summary: Missing or non-numeric parameter
+                  value: '{"error":"strconv.Atoi: parsing \"\": invalid syntax","status":"bad","resp":""}'
+  /fetchAction:
+    get:
+      summary: Get current game action state
+      description: |
+        Returns the room's action data as a string produced by Go's `fmt.Sprint`
+        on the `GameActionData` struct, in this field order:
+        `{ban plusTwo color clockWise turn lastCard plusFour}`.
+        `color` is only set when the room is created; it is not updated when a
+        card is played.
+      operationId: fetchAction
+      parameters:
+        - in: query
+          name: roomID
+          required: true
+          schema:
+            type: integer
+          description: Room ID
+      responses:
+        '200':
+          description: Game action data returned, or the room data file was not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: JSON text; on success `resp` contains the `fmt.Sprint` rendering of the action data.
+              examples:
+                success:
+                  summary: Current game action data
+                  value: '{"error":"","status":"ok","resp":"{false 0 2 true 1 223 0}"}'
+                roomNotFound:
+                  summary: Room data file not found
+                  value: '{"error":"open 999.data.json: no such file or directory","status":"bad","resp":""}'
+                invalidParam:
+                  summary: Missing or non-numeric `roomID`
+                  value: '{"error":"strconv.Atoi: parsing \"\": invalid syntax","status":"bad","resp":""}'
+  /action:
+    get:
+      summary: Play a card / perform a game action
+      description: |
+        Validates and processes a card play for the given player in the room.
+        Checks card ownership and legality (color/number/wild match), updates the
+        hand, discard pile, and turn, and applies the Skip turn effect.
+        On success the response is HTTP 200 with an empty body.
+
+        Error handling as currently implemented:
+        - `roomID` and `player` parse errors are silently ignored (the last `Atoi`
+          error, for `card`, wins).
+        - If `card` is missing or non-numeric, the response has status "ok" with
+          the Atoi error text in `resp`.
+        - Other errors are returned as the usual envelope with status "bad".
+      operationId: playAction
+      parameters:
+        - in: query
+          name: roomID
+          required: true
+          schema:
+            type: integer
+          description: Room ID
+        - in: query
+          name: player
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+          description: Player ID (1-4)
+        - in: query
+          name: card
+          required: true
+          schema:
+            type: integer
+          description: Card ID to play
+      responses:
+        '200':
+          description: |
+            Action processed (empty body) or an error returned as JSON text.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Empty on success; JSON text on error.
+              examples:
+                success:
+                  summary: Card played successfully (empty body)
+                  value: ''
+                invalidCardParam:
+                  summary: Missing or non-numeric `card`
+                  value: '{"error":"","status":"ok","resp":"strconv.Atoi: parsing \"\": invalid syntax"}'
+                cardNotLegal:
+                  summary: Card not legal
+                  value: '{"error":"Card Not Legal","status":"bad","resp":""}'
+                cardNotFoundInPlayer:
+                  summary: Card not found in player
+                  value: '{"error":"Card Not Found in player","status":"bad","resp":""}'
+                illegalCard:
+                  summary: Card ID is not in the deck
+                  value: '{"error":"Illegal card ID","status":"bad","resp":""}'
+                notYourTurn:
+                  summary: Not the player's turn
+                  value: '{"error":"Not your turn","status":"bad","resp":""}'
+                roomNotFound:
+                  summary: Room file not found
+                  value: '{"error":"open 0.json: no such file or directory","status":"bad","resp":""}'
 components:
   schemas:
-    HealthResponse:
+    GameActionData:
       type: object
-      required:
-        - ok
+      description: |
+        Logical fields of `<roomID>.data.json`. `/fetchAction` returns this struct
+        via `fmt.Sprint`, not as a JSON object.
       properties:
-        ok:
+        ban:
           type: boolean
+          description: Initialized to false; currently never updated (Skip is implemented by advancing `turn`).
+          example: false
+        plusTwo:
+          type: integer
+          description: Initialized to 0; currently never updated.
+          example: 0
+        color:
+          type: integer
+          description: |
+            Color derived from the initial `lastCard` via its hundreds digit:
+            100 -> 0, 1xx -> 1 (Red), 2xx -> 2 (Yellow), 3xx -> 3 (Blue),
+            4xx -> 4 (Green), 5xx -> 5 (Wild). Not updated when cards are played.
+          example: 1
+        clockWise:
+          type: boolean
+          description: Initialized to true; currently never updated (Reverse is not implemented).
+          example: true
+        turn:
+          type: integer
+          description: Current player's turn (1-4).
+          example: 1
+        lastCard:
+          type: integer
+          description: The last played card ID.
+          example: 105
+        plusFour:
+          type: integer
+          description: Initialized to 0; currently never updated.
+          example: 0
 ```
